@@ -504,7 +504,6 @@ namespace FrozenNorth.OpenGL.FN2D
 				x += glyph.advance.Width;
 				prevGlyph = glyph;
 			}
-			arrays.Complete();
 
 			// return the size
 			size.Width = (float)Math.Ceiling(x);
