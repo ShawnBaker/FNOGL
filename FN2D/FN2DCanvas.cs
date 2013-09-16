@@ -111,7 +111,7 @@ namespace FrozenNorth.OpenGL.FN2D
 
 			// create the modal overlay
 			modalOverlay = new FN2DControl(this);
-			modalOverlay.BackgroundColor = Color.FromArgb(128, 128, 128, 128);
+			modalOverlay.BackgroundColor = Color.FromArgb(128, 0, 0, 0);
 
 			// set the loaded flag
 			loaded = true;
