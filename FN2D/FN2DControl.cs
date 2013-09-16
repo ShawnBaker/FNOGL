@@ -255,6 +255,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		/// </summary>
 		public virtual void DrawBackground()
 		{
+			GL.Color4(0, 0, 0, 0);
 			background.Draw();
 			if (backgroundImage != null)
 			{
@@ -948,11 +949,11 @@ namespace FrozenNorth.OpenGL.FN2D
 		public virtual void TouchCancel(FN2DTouchEventArgs e)
 		{
 			//Console.WriteLine("TouchCancel: " + touchEnabled + "   " + frame);
-			Touching = false;
 			foreach (FN2DControl control in controls)
 			{
 				control.TouchCancel(e);
 			}
+			Touching = false;
 		}
 	}
 
