@@ -43,7 +43,7 @@ using VertexPointerType = OpenTK.Graphics.ES11.All;
 namespace FrozenNorth.OpenGL.FN2D
 {
 	/// <summary>
-	/// OpenGL 2D texture coordinate, vertex, color and index arrays for drawing.
+	/// OpenGL 2D vertex, texture coordinate, color and index arrays for drawing.
 	/// </summary>
 	public class FN2DArrays : IDisposable
 	{
@@ -59,8 +59,8 @@ namespace FrozenNorth.OpenGL.FN2D
 		private static bool gotUsingVBO = false;
 
 		// instance variables
-		private BeginMode drawMode = BeginMode.Triangles;
-		private int allocInc = 64;
+		private BeginMode drawMode;
+		private int allocInc;
 		private FN2DVertex[] buffer;
 		private float[] vertices;
 		private float[] texCoords;
@@ -72,6 +72,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		private uint numIndices;
 		private int arrayId;
 		private int indexId;
+		private bool changed;
 
 		/// <summary>
 		/// Constructor - Creates an empty set of arrays.
@@ -105,7 +106,48 @@ namespace FrozenNorth.OpenGL.FN2D
 		/// </summary>
 		protected virtual void Dispose(bool disposing)
 		{
+			// delete the buffers
+			if (arrayId != 0)
+			{
+				GL.DeleteBuffers(1, ref arrayId);
+				arrayId = 0;
+			}
+			if (indexId != 0)
+			{
+				GL.DeleteBuffers(1, ref indexId);
+				indexId = 0;
+			}
+
+			// clear the arrays
 			Clear();
+		}
+
+		/// <summary>
+		/// Writes the VBO buffers to the GPU if they've changed.
+		/// </summary>
+		private void SetVboData()
+		{
+			if (UsingVBO && changed)
+			{
+				// create, bind and upload the vertices to a buffer
+				if (arrayId == 0)
+				{
+					GL.GenBuffers(1, out arrayId);
+				}
+				GL.BindBuffer(BufferTarget.ArrayBuffer, arrayId);
+				GL.BufferData<FN2DVertex>(BufferTarget.ArrayBuffer, (IntPtr)(Marshal.SizeOf(buffer[0]) * numVertices), buffer, BufferUsageHint.DynamicDraw);
+				GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+
+				// create, bind and upload the indices to a buffer
+				if (indexId == 0)
+				{
+					GL.GenBuffers(1, out indexId);
+				}
+				GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexId);
+				GL.BufferData<uint>(BufferTarget.ElementArrayBuffer, (IntPtr)(Marshal.SizeOf(indices[0]) * numIndices), indices, BufferUsageHint.DynamicDraw);
+				GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
+			}
+			changed = false;
 		}
 
 		/// <summary>
@@ -143,56 +185,10 @@ namespace FrozenNorth.OpenGL.FN2D
 		}
 
 		/// <summary>
-		/// Uploads the arrays to the GPU.
-		/// </summary>
-		public void Complete()
-		{
-			if (UsingVBO && (numVertices != 0 || numTexCoords != 0 || numColors != 0 || numIndices != 0))
-			{
-				// create, bind and upload the vertices to a buffer
-				if (arrayId != 0)
-				{
-					GL.DeleteBuffers(1, ref arrayId);
-					arrayId = 0;
-				}
-				GL.GenBuffers(1, out arrayId);
-				GL.BindBuffer(BufferTarget.ArrayBuffer, arrayId);
-				GL.BufferData<FN2DVertex>(BufferTarget.ArrayBuffer, (IntPtr)(Marshal.SizeOf(buffer[0]) * numVertices), buffer, BufferUsageHint.DynamicDraw);
-				GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-
-				// create, bind and upload the indices to a buffer
-				if (indexId != 0)
-				{
-					GL.DeleteBuffers(1, ref indexId);
-					indexId = 0;
-				}
-				if (numIndices != 0)
-				{
-					GL.GenBuffers(1, out indexId);
-					GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexId);
-					GL.BufferData<uint>(BufferTarget.ElementArrayBuffer, (IntPtr)(Marshal.SizeOf(indices[0]) * numIndices), indices, BufferUsageHint.DynamicDraw);
-					GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
-				}
-			}
-		}
-
-		/// <summary>
 		/// Clears the arrays and resets the array indexes.
 		/// </summary>
 		public void Clear()
 		{
-			// delete the buffers
-			if (arrayId != 0)
-			{
-				GL.DeleteBuffers(1, ref arrayId);
-				arrayId = 0;
-			}
-			if (indexId != 0)
-			{
-				GL.DeleteBuffers(1, ref indexId);
-				indexId = 0;
-			}
-
 			// clear the object references
 			buffer = null;
 			vertices = null;
@@ -205,6 +201,9 @@ namespace FrozenNorth.OpenGL.FN2D
 			numTexCoords = 0;
 			numColors = 0;
 			numIndices = 0;
+
+			// set the changed flag
+			changed = true;
 		}
 
 		/// <summary>
@@ -242,6 +241,7 @@ namespace FrozenNorth.OpenGL.FN2D
 				vertices[numVertices * 2 + 1] = y;
 			}
 			numVertices++;
+			changed = true;
 			return numVertices - 1;
 		}
 		
@@ -325,6 +325,7 @@ namespace FrozenNorth.OpenGL.FN2D
 				texCoords[numTexCoords * 2 + 1] = y;
 			}
 			numTexCoords++;
+			changed = true;
 			return numTexCoords - 1;
 		}
 
@@ -387,6 +388,7 @@ namespace FrozenNorth.OpenGL.FN2D
 				colors[i++] = a;
 			}
 			numColors++;
+			changed = true;
 			return numColors - 1;
 		}
 
@@ -447,6 +449,7 @@ namespace FrozenNorth.OpenGL.FN2D
 				Array.Resize(ref indices, indices.Length + allocInc);
 			}
 			indices[numIndices++] = el;
+			changed = true;
 			return numIndices - 1;
 		}
 
@@ -555,6 +558,7 @@ namespace FrozenNorth.OpenGL.FN2D
 					vertices[i * 2 + 1] += offset.Y;
 				}
 			}
+			changed = true;
 		}
 
 		/// <summary>
@@ -603,6 +607,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		/// </summary>
 		public void Draw()
 		{
+			SetVboData();
 			if (numVertices != 0 || numTexCoords != 0 || numColors != 0 || numIndices != 0)
 			{
 				// enable the appropriate arrays
@@ -691,19 +696,20 @@ namespace FrozenNorth.OpenGL.FN2D
 					foreach (byte item in colors) Console.Write(" " + item); Console.WriteLine();
 					foreach (int item in indices) Console.Write(" " + item); Console.WriteLine();
 					*/
-					// clear the arrays
-					if (numVertices != 0)
-					{
-						GL.VertexPointer(2, VertexPointerType.Float, 0, IntPtr.Zero);
-					}
-					if (numTexCoords != 0)
-					{
-						GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, IntPtr.Zero);
-					}
-					if (numColors != 0)
-					{
-						GL.ColorPointer(4, ColorPointerType.UnsignedByte, 0, IntPtr.Zero);
-					}
+				}
+
+				// clear the arrays
+				if (numVertices != 0)
+				{
+					GL.VertexPointer(2, VertexPointerType.Float, 0, IntPtr.Zero);
+				}
+				if (numTexCoords != 0)
+				{
+					GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, IntPtr.Zero);
+				}
+				if (numColors != 0)
+				{
+					GL.ColorPointer(4, ColorPointerType.UnsignedByte, 0, IntPtr.Zero);
 				}
 
 				// disable the arrays
@@ -733,6 +739,9 @@ namespace FrozenNorth.OpenGL.FN2D
 		}
 	}
 
+	/// <summary>
+	/// OpenGL 2D vertex used for VBO access.
+	/// </summary>
 	[StructLayout(LayoutKind.Sequential)]
 	public struct FN2DVertex
 	{
