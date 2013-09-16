@@ -152,56 +152,13 @@ namespace FrozenNorth.OpenGL.FN2D
 		}
 
 		/// <summary>
-		/// Creates a texture with a specific size and option intiialization data.
-		/// </summary>
-		/// <param name="width">Width of the image to be placed into the texture.</param>
-		/// <param name="height">Height of the image to be placed into the texture.</param>
-		/// <param name="data">Pointer to the image data or IntPtr.Zero if there is no image data.</param>
-		public void CreateTexture(int width, int height, IntPtr data)
-		{
-			// create the texture
-			GL.GenTextures(1, out textureId);
-			GL.BindTexture(TextureTarget.Texture2D, textureId);
-			GL.TexParameter(TextureTarget.Texture2D, TextureParamName.TextureMagFilter, (int)All.Linear);
-			GL.TexParameter(TextureTarget.Texture2D, TextureParamName.TextureMinFilter, (int)All.Linear);
-			GL.TexParameter(TextureTarget.Texture2D, TextureParamName.TextureWrapS, (int)All.ClampToEdge);
-			GL.TexParameter(TextureTarget.Texture2D, TextureParamName.TextureWrapT, (int)All.ClampToEdge);
-
-			// copy the image to the texture, set the sizes
-			imageSize = new Size(width, height);
-			if (UsingPowerOf2)
-			{
-				textureSize = new Size(NearestPowerOf2(width), NearestPowerOf2(height));
-				drawingSize = new SizeF((float)width / textureSize.Width, (float)height / textureSize.Height);
-				GL.TexImage2D(TextureTarget.Texture2D, 0, TexturePixelFormat, textureSize.Width, textureSize.Height, 0,
-				              BitmapPixelFormat, PixelType.UnsignedByte, IntPtr.Zero);
-				if (data != IntPtr.Zero)
-				{
-					GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, width, height, BitmapPixelFormat,
-					                 PixelType.UnsignedByte, data);
-				}
-			}
-			else
-			{
-				textureSize = new Size(width, height);
-				drawingSize = new SizeF(1, 1);
-				GL.TexImage2D(TextureTarget.Texture2D, 0, TexturePixelFormat, width, height, 0,
-				              BitmapPixelFormat, PixelType.UnsignedByte, data);
-			}
-			GL.BindTexture(TextureTarget.Texture2D, 0);
-
-			// refresh the arrays
-			Refresh();
-		}
-
-		/// <summary>
 		/// Sets the image data.
 		/// </summary>
 		public virtual IntPtr ImageData
 		{
 			set
 			{
-				if (value != IntPtr.Zero)
+				if (value != IntPtr.Zero && textureId != 0)
 				{
 					GL.BindTexture(TextureTarget.Texture2D, textureId);
 					GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, imageSize.Width, imageSize.Height, BitmapPixelFormat, PixelType.UnsignedByte, value);
@@ -218,12 +175,11 @@ namespace FrozenNorth.OpenGL.FN2D
 			get { return image; }
 			set
 			{
-				// delete the current texture
+				// create the texture if necessary
 				GL.Enable(EnableCap.Texture2D);
-				if (textureId != 0)
+				if (textureId == 0)
 				{
-					GL.DeleteTextures(1, ref textureId);
-					textureId = 0;
+					GL.GenTextures(1, out textureId);
 				}
 
 				// set the new image
@@ -232,13 +188,11 @@ namespace FrozenNorth.OpenGL.FN2D
 				// if there's an image then create a new texture for it
 				if (image != null)
 				{
-					IntPtr rgbBuffer = IntPtr.Zero;
 #if FN2D_WIN
-					imageSize = image.Size;
 					BitmapData imageData = null;
-#elif FN2D_IOS
-					imageSize = image.Size.ToSize();
 #endif
+					IntPtr rgbBuffer = IntPtr.Zero;
+					imageSize = new Size((int)image.Size.Width, (int)image.Size.Height);
 					if (!insets.IsFull)
 					{
 						frame.Size = imageSize;
@@ -272,8 +226,34 @@ namespace FrozenNorth.OpenGL.FN2D
 #endif
 						}
 
-						// create a texture from the image data
-						CreateTexture(imageSize.Width, imageSize.Height, rgbBuffer);
+						// bind and configure the texture
+						GL.BindTexture(TextureTarget.Texture2D, textureId);
+						GL.TexParameter(TextureTarget.Texture2D, TextureParamName.TextureMagFilter, (int)All.Linear);
+						GL.TexParameter(TextureTarget.Texture2D, TextureParamName.TextureMinFilter, (int)All.Linear);
+						GL.TexParameter(TextureTarget.Texture2D, TextureParamName.TextureWrapS, (int)All.ClampToEdge);
+						GL.TexParameter(TextureTarget.Texture2D, TextureParamName.TextureWrapT, (int)All.ClampToEdge);
+
+						// copy the image to the texture, set the sizes
+						if (UsingPowerOf2)
+						{
+							textureSize = new Size(NearestPowerOf2(imageSize.Width), NearestPowerOf2(imageSize.Height));
+							drawingSize = new SizeF((float)imageSize.Width / textureSize.Width, (float)imageSize.Height / textureSize.Height);
+							GL.TexImage2D(TextureTarget.Texture2D, 0, TexturePixelFormat, textureSize.Width, textureSize.Height, 0,
+							              BitmapPixelFormat, PixelType.UnsignedByte, IntPtr.Zero);
+							if (rgbBuffer != IntPtr.Zero)
+							{
+								GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, imageSize.Width, imageSize.Height, BitmapPixelFormat,
+								                 PixelType.UnsignedByte, rgbBuffer);
+							}
+						}
+						else
+						{
+							textureSize = imageSize;
+							drawingSize = new SizeF(1, 1);
+							GL.TexImage2D(TextureTarget.Texture2D, 0, TexturePixelFormat, imageSize.Width, imageSize.Height, 0,
+							              BitmapPixelFormat, PixelType.UnsignedByte, rgbBuffer);
+						}
+						GL.BindTexture(TextureTarget.Texture2D, 0);
 					}
 					catch
 					{
@@ -296,6 +276,13 @@ namespace FrozenNorth.OpenGL.FN2D
 						GL.Disable(EnableCap.Texture2D);
 					}
 				}
+				else
+				{
+					imageSize = Size.Empty;
+				}
+				
+				// refresh the arrays
+				Refresh();
 			}
 		}
 
@@ -377,7 +364,7 @@ namespace FrozenNorth.OpenGL.FN2D
 			base.Refresh();
 
 			// if there's a texture
-			if (textureId != 0)
+			if (textureId != 0 && !imageSize.IsEmpty)
 			{
 				// build and draw the arrays
 				middleArrays = null;
@@ -510,13 +497,6 @@ namespace FrozenNorth.OpenGL.FN2D
 					// add the rectangle
 					arrays.AddRect(topLeft.X, topLeft.Y, bottomRight.X, bottomRight.Y, 0, 0, drawingSize.Width, drawingSize.Height);
 				}
-
-				// complete the arrays
-				arrays.Complete();
-				if (middleArrays != null)
-				{
-					middleArrays.Complete();
-				}
 			}
 			else
 			{
@@ -533,7 +513,7 @@ namespace FrozenNorth.OpenGL.FN2D
 			base.Draw();
 
 			// if there's a texture
-			if (textureId != 0)
+			if (textureId != 0 && Visible && !imageSize.IsEmpty)
 			{
 				// draw the middle color arrays
 				if (middleArrays != null)
