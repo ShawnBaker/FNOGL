@@ -265,7 +265,6 @@ namespace FrozenNorth.OpenGL.FN2D
 
 					// adjust the vertices
 					arrays[i].OffsetVertices(offset);
-					arrays[i].Complete();
 					offset.Y += lineHeight;
 				}
 			}
