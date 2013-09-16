@@ -1,3 +1,26 @@
+/*******************************************************************************
+*
+* Copyright (C) 2013 Frozen North Computing
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*
+*******************************************************************************/
 using System;
 using System.Drawing;
 #if FN2D_WIN
@@ -77,15 +100,19 @@ namespace FrozenNorth.OpenGL.FN2D
 
 		public override void TouchDown(FN2DTouchEventArgs e)
 		{
-			Touching = true;
-			lineStrips.Add();
-			lineStrips.Add(GetZoomedLocation(e.Location));
+			base.TouchDown(e);
+			if (e.Buttons == FN2DTouchButtons.Left)
+			{
+				Touching = true;
+				lineStrips.Add();
+				lineStrips.Add(GetZoomedLocation(e.Location));
+			}
 		}
 
 		public override void TouchMove(FN2DTouchEventArgs e)
 		{
 			base.TouchMove(e);
-			if (Touching)
+			if (Touching && e.Buttons == FN2DTouchButtons.Left)
 			{
 				lineStrips.Add(GetZoomedLocation(e.Location));
 				canvas.IsDirty = true;
@@ -95,17 +122,20 @@ namespace FrozenNorth.OpenGL.FN2D
 		public override void TouchUp(FN2DTouchEventArgs e)
 		{
 			base.TouchUp(e);
-			lineStrips.Add(GetZoomedLocation(e.Location));
-			canvas.IsDirty = true;
+			if (e.Buttons == FN2DTouchButtons.Left)
+			{
+				lineStrips.Add(GetZoomedLocation(e.Location));
+				canvas.IsDirty = true;
+			}
 		}
 
 		public override void TouchCancel(FN2DTouchEventArgs e)
 		{
-			base.TouchCancel(e);
 			if (Touching)
 			{
 				lineStrips.Remove(lineStrips.LineStrip);
 			}
+			base.TouchCancel(e);
 		}
 	}
 }
