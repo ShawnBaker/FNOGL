@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>10.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{12C2CCB1-4F1F-46EE-970C-9E216D269860}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>FrozenNorth.TestFN2D</RootNamespace>
+    <AssemblyName>TestFN2D</AssemblyName>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\x86\Debug</OutputPath>
+    <DefineConstants>DEBUG;WINDOWS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <Optimize>true</Optimize>
+    <OutputPath>bin\x86\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+    <ConsolePause>false</ConsolePause>
+    <DefineConstants>WINDOWS</DefineConstants>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Canvas.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Canvas_WIN.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="OpenTK">
+      <HintPath>..\ThirdParty\OpenTK.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenTK.GLControl">
+      <HintPath>..\ThirdParty\OpenTK.GLControl.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\button_blue.png" />
+    <EmbeddedResource Include="Images\button_blue_pressed.png" />
+    <EmbeddedResource Include="Images\button_disabled.png" />
+    <EmbeddedResource Include="Images\button_green.png" />
+    <EmbeddedResource Include="Images\button_green_pressed.png" />
+    <EmbeddedResource Include="Images\button_red.png" />
+    <EmbeddedResource Include="Images\button_red_pressed.png" />
+    <EmbeddedResource Include="Images\OldPenny.png" />
+    <EmbeddedResource Include="Images\SkaraBrae.jpg" />
+    <EmbeddedResource Include="Images\PurpleSquares.png" />
+    <EmbeddedResource Include="Images\PurpleSquaresDisabled.png" />
+    <EmbeddedResource Include="Images\YellowCircles.png" />
+    <EmbeddedResource Include="Images\YellowCirclesDisabled.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Fonts\Vera.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Fonts\VeraBd.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FN2D\FN2D_WIN.csproj">
+      <Project>{4EE546B8-15AB-45AA-B208-721BFC01CE48}</Project>
+      <Name>FN2D_WIN</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\ThirdParty\freetype.dll">
+      <Link>freetype.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

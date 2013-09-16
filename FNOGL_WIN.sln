@@ -1,0 +1,51 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestFN2D_WIN", "TestFN2D\TestFN2D_WIN.csproj", "{12C2CCB1-4F1F-46EE-970C-9E216D269860}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FN2D_WIN", "FN2D\FN2D_WIN.csproj", "{4EE546B8-15AB-45AA-B208-721BFC01CE48}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug WIN64|Any CPU = Debug WIN64|Any CPU
+		Debug WIN64|x86 = Debug WIN64|x86
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x86 = Debug|x86
+		Release WIN64|Any CPU = Release WIN64|Any CPU
+		Release WIN64|x86 = Release WIN64|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{12C2CCB1-4F1F-46EE-970C-9E216D269860}.Debug WIN64|Any CPU.ActiveCfg = Debug|x86
+		{12C2CCB1-4F1F-46EE-970C-9E216D269860}.Debug WIN64|Any CPU.Build.0 = Debug|x86
+		{12C2CCB1-4F1F-46EE-970C-9E216D269860}.Debug WIN64|x86.ActiveCfg = Debug|x86
+		{12C2CCB1-4F1F-46EE-970C-9E216D269860}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{12C2CCB1-4F1F-46EE-970C-9E216D269860}.Debug|x86.ActiveCfg = Debug|x86
+		{12C2CCB1-4F1F-46EE-970C-9E216D269860}.Debug|x86.Build.0 = Debug|x86
+		{12C2CCB1-4F1F-46EE-970C-9E216D269860}.Release WIN64|Any CPU.ActiveCfg = Debug|x86
+		{12C2CCB1-4F1F-46EE-970C-9E216D269860}.Release WIN64|Any CPU.Build.0 = Debug|x86
+		{12C2CCB1-4F1F-46EE-970C-9E216D269860}.Release WIN64|x86.ActiveCfg = Release|x86
+		{12C2CCB1-4F1F-46EE-970C-9E216D269860}.Release|Any CPU.ActiveCfg = Release|x86
+		{12C2CCB1-4F1F-46EE-970C-9E216D269860}.Release|x86.ActiveCfg = Release|x86
+		{12C2CCB1-4F1F-46EE-970C-9E216D269860}.Release|x86.Build.0 = Release|x86
+		{4EE546B8-15AB-45AA-B208-721BFC01CE48}.Debug WIN64|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EE546B8-15AB-45AA-B208-721BFC01CE48}.Debug WIN64|Any CPU.Build.0 = Debug|Any CPU
+		{4EE546B8-15AB-45AA-B208-721BFC01CE48}.Debug WIN64|x86.ActiveCfg = Debug|Any CPU
+		{4EE546B8-15AB-45AA-B208-721BFC01CE48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EE546B8-15AB-45AA-B208-721BFC01CE48}.Debug|x86.ActiveCfg = Debug|x86
+		{4EE546B8-15AB-45AA-B208-721BFC01CE48}.Debug|x86.Build.0 = Debug|x86
+		{4EE546B8-15AB-45AA-B208-721BFC01CE48}.Release WIN64|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EE546B8-15AB-45AA-B208-721BFC01CE48}.Release WIN64|Any CPU.Build.0 = Debug|Any CPU
+		{4EE546B8-15AB-45AA-B208-721BFC01CE48}.Release WIN64|x86.ActiveCfg = Release|Any CPU
+		{4EE546B8-15AB-45AA-B208-721BFC01CE48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4EE546B8-15AB-45AA-B208-721BFC01CE48}.Release|x86.ActiveCfg = Release|Any CPU
+		{4EE546B8-15AB-45AA-B208-721BFC01CE48}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = TestFN2D\TestFN2D_WIN.csproj
+	EndGlobalSection
+EndGlobal
