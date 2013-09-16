@@ -263,7 +263,6 @@ namespace FrozenNorth.OpenGL.FN2D
 			{
 				rectArrays.AllocRects(1, false, true);
 				AddRect(0, 0, frame.Width, frame.Height, topColor, bottomColor);
-				rectArrays.Complete();
 				topRightArrays.Clear();
 				bottomRightArrays.Clear();
 				bottomLeftArrays.Clear();
@@ -277,23 +276,18 @@ namespace FrozenNorth.OpenGL.FN2D
 				AddRect(0, cornerRadius, cornerRadius, frame.Height - cornerRadius);
 				AddRect(frame.Width - cornerRadius, cornerRadius, frame.Width, frame.Height - cornerRadius);
 				AddRect(cornerRadius, 0, frame.Width - cornerRadius, frame.Height, topColor, bottomColor);
-				rectArrays.Complete();
 
 				topRightArrays.Alloc(numCornerSteps + 2, 0, numCornerSteps + 2, 0);
 				AddCorner(topRightArrays, frame.Width - cornerRadius, cornerRadius, Math.PI * 1.5);
-				topRightArrays.Complete();
 
 				bottomRightArrays.Alloc(numCornerSteps + 2, 0, numCornerSteps + 2, 0);
 				AddCorner(bottomRightArrays, frame.Width - cornerRadius, frame.Height - cornerRadius, 0);
-				bottomRightArrays.Complete();
 
 				bottomLeftArrays.Alloc(numCornerSteps + 2, 0, numCornerSteps + 2, 0);
 				AddCorner(bottomLeftArrays, cornerRadius, frame.Height - cornerRadius, Math.PI * 0.5);
-				bottomLeftArrays.Complete();
 
 				topLeftArrays.Alloc(numCornerSteps + 2, 0, numCornerSteps + 2, 0);
 				AddCorner(topLeftArrays, cornerRadius, cornerRadius, Math.PI);
-				topLeftArrays.Complete();
 			}
 		}
 
