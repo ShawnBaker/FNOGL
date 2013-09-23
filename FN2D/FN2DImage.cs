@@ -82,8 +82,8 @@ namespace FrozenNorth.OpenGL.FN2D
 		protected int textureId = 0;
 		protected FN2DRectangleInsets insets = FN2DRectangleInsets.Empty;
 		protected bool tile = false;
-		protected FN2DArrays arrays = new FN2DArrays();
-		protected FN2DArrays middleArrays = null;
+		protected FN2DArrays arrays = FN2DArrays.Create();
+		protected FN2DArrays middleArrays = FN2DArrays.Create();
 		protected Color middleColor = Color.Transparent;
 
 		/// <summary>
@@ -124,14 +124,13 @@ namespace FrozenNorth.OpenGL.FN2D
 				if (image != null) image.Dispose();
 				if (arrays != null) arrays.Dispose();
 				if (middleArrays != null) middleArrays.Dispose();
-			}
 
-			// delete the texture
-			if (textureId != 0)
-			{
-				try { GL.DeleteTextures(1, ref textureId); }
-				catch { }
-				finally { textureId = 0; }
+				// delete the texture
+				if (textureId != 0)
+				{
+					GL.DeleteTextures(1, ref textureId);
+					textureId = 0;
+				}
 			}
 
 			// clear the object references
@@ -361,147 +360,148 @@ namespace FrozenNorth.OpenGL.FN2D
 		/// </summary>
 		public override void Refresh()
 		{
-			base.Refresh();
-
-			// if there's a texture
-			if (textureId != 0 && !imageSize.IsEmpty)
+			if (refreshEnabled)
 			{
-				// build and draw the arrays
-				middleArrays = null;
-				if (insets.IsFull)
+				base.Refresh();
+
+				// if there's a texture
+				middleArrays.Clear();
+				if (textureId != 0 && !imageSize.IsEmpty)
 				{
-					// get the number of rectangles
-					int middleWidth = Width - insets.Left - insets.Right;
-					int middleHeight = Height - insets.Top - insets.Bottom;
-					int imageMiddleWidth = imageSize.Width - insets.Left - insets.Right;
-					int imageMiddleHeight = imageSize.Height - insets.Top - insets.Bottom;
-					int numTopBottom = middleWidth / imageMiddleWidth;
-					if (numTopBottom % imageMiddleWidth != 0)
-						numTopBottom++;
-					if (numTopBottom < 0)
-						numTopBottom = 0;
-					int numLeftRight = middleHeight / imageMiddleHeight;
-					if (numLeftRight % imageMiddleHeight != 0)
-						numLeftRight++;
-					if (numLeftRight < 0)
-						numLeftRight = 0;
-					int numRectangles = numTopBottom * 2 + numLeftRight * 2 + 4;
-					bool fillMiddle = imageMiddleWidth == 1 && imageMiddleHeight == 1;
-					//bool fillMiddle = false;
-					if (!fillMiddle)
-						numRectangles += numTopBottom * numLeftRight;
-
-					// allocate arrays for all the rectangles
-					arrays.AllocRects(numRectangles, true, false);
-					//Console.WriteLine("Insets: " + insets + "  " + Size + "  " + imageSize + "  " + textureSize + "  " + drawingSize);
-
-					// create array entries for the top and bottom
-					int x = insets.Left;
-					int y = Height - insets.Bottom;
-					PointF cTopLeft1 = new PointF((float)insets.Left / textureSize.Width, 0);
-					PointF cBottomRight1 = new PointF((float)(insets.Left + imageMiddleWidth) / textureSize.Width, (float)insets.Top / textureSize.Height);
-					PointF cTopLeft2 = new PointF(cTopLeft1.X, (float)(imageSize.Height - insets.Bottom) / textureSize.Height);
-					PointF cBottomRight2 = new PointF(cBottomRight1.X, drawingSize.Height);
-					for (int i = 0; i < numTopBottom; i++)
+					// build and draw the arrays
+					if (insets.IsFull)
 					{
-						int x2 = x + imageMiddleWidth;
-						arrays.AddRect(x, 0, x2, insets.Top, cTopLeft1.X, cTopLeft1.Y, cBottomRight1.X, cBottomRight1.Y);
-						arrays.AddRect(x, y, x2, Height, cTopLeft2.X, cTopLeft2.Y, cBottomRight2.X, cBottomRight2.Y);
-						x = x2;
-					}
+						// get the number of rectangles
+						int middleWidth = Width - insets.Left - insets.Right;
+						int middleHeight = Height - insets.Top - insets.Bottom;
+						int imageMiddleWidth = imageSize.Width - insets.Left - insets.Right;
+						int imageMiddleHeight = imageSize.Height - insets.Top - insets.Bottom;
+						int numTopBottom = middleWidth / imageMiddleWidth;
+						if (numTopBottom % imageMiddleWidth != 0)
+							numTopBottom++;
+						if (numTopBottom < 0)
+							numTopBottom = 0;
+						int numLeftRight = middleHeight / imageMiddleHeight;
+						if (numLeftRight % imageMiddleHeight != 0)
+							numLeftRight++;
+						if (numLeftRight < 0)
+							numLeftRight = 0;
+						int numRectangles = numTopBottom * 2 + numLeftRight * 2 + 4;
+						bool fillMiddle = imageMiddleWidth == 1 && imageMiddleHeight == 1;
+						//bool fillMiddle = false;
+						if (!fillMiddle)
+							numRectangles += numTopBottom * numLeftRight;
 
-					// create array entries for the sides
-					x = Width - insets.Right;
-					y = insets.Top;
-					cTopLeft1 = new PointF(0, (float)insets.Top / textureSize.Height);
-					cBottomRight1 = new PointF((float)insets.Left / textureSize.Width, (float)(insets.Top + imageMiddleHeight) / textureSize.Height);
-					cTopLeft2 = new PointF((float)(imageSize.Width - insets.Right) / textureSize.Width, cTopLeft1.Y);
-					cBottomRight2 = new PointF(drawingSize.Width, cBottomRight1.Y);
-					for (int i = 0; i < numLeftRight; i++)
-					{
-						int y2 = y + imageMiddleHeight;
-						arrays.AddRect(0, y, insets.Left, y2, cTopLeft1.X, cTopLeft1.Y, cBottomRight1.X, cBottomRight1.Y);
-						arrays.AddRect(x, y, Width, y2, cTopLeft2.X, cTopLeft2.Y, cBottomRight2.X, cBottomRight2.Y);
-						y = y2;
-					}
+						// allocate arrays for all the rectangles
+						arrays.AllocRects(numRectangles, true, false);
+						//Console.WriteLine("Insets: " + insets + "  " + Size + "  " + imageSize + "  " + textureSize + "  " + drawingSize);
 
-					// create array entries for the middle
-					cTopLeft1 = new PointF((float)insets.Left / textureSize.Width, (float)insets.Top / textureSize.Height);
-					cBottomRight1 = new PointF((float)(imageSize.Width - insets.Right) / textureSize.Width, (float)(imageSize.Height - insets.Bottom) / textureSize.Height);
-					Point vBottomRight = new Point(Width - insets.Right, Height - insets.Bottom);
-					if (fillMiddle)
-					{
-						middleArrays = new FN2DArrays();
-						middleArrays.AllocRects(1, false, true);
-						middleArrays.AddRect(insets.Left, insets.Top, vBottomRight.X, vBottomRight.Y, middleColor);
-					}
-					else
-					{
+						// create array entries for the top and bottom
+						int x = insets.Left;
+						int y = Height - insets.Bottom;
+						PointF cTopLeft1 = new PointF((float)insets.Left / textureSize.Width, 0);
+						PointF cBottomRight1 = new PointF((float)(insets.Left + imageMiddleWidth) / textureSize.Width, (float)insets.Top / textureSize.Height);
+						PointF cTopLeft2 = new PointF(cTopLeft1.X, (float)(imageSize.Height - insets.Bottom) / textureSize.Height);
+						PointF cBottomRight2 = new PointF(cBottomRight1.X, drawingSize.Height);
+						for (int i = 0; i < numTopBottom; i++)
+						{
+							int x2 = x + imageMiddleWidth;
+							arrays.AddRect(x, 0, x2, insets.Top, cTopLeft1.X, cTopLeft1.Y, cBottomRight1.X, cBottomRight1.Y);
+							arrays.AddRect(x, y, x2, Height, cTopLeft2.X, cTopLeft2.Y, cBottomRight2.X, cBottomRight2.Y);
+							x = x2;
+						}
+
+						// create array entries for the sides
+						x = Width - insets.Right;
 						y = insets.Top;
+						cTopLeft1 = new PointF(0, (float)insets.Top / textureSize.Height);
+						cBottomRight1 = new PointF((float)insets.Left / textureSize.Width, (float)(insets.Top + imageMiddleHeight) / textureSize.Height);
+						cTopLeft2 = new PointF((float)(imageSize.Width - insets.Right) / textureSize.Width, cTopLeft1.Y);
+						cBottomRight2 = new PointF(drawingSize.Width, cBottomRight1.Y);
 						for (int i = 0; i < numLeftRight; i++)
 						{
-							x = insets.Left;
 							int y2 = y + imageMiddleHeight;
-							for (int j = 0; j < numTopBottom; j++)
+							arrays.AddRect(0, y, insets.Left, y2, cTopLeft1.X, cTopLeft1.Y, cBottomRight1.X, cBottomRight1.Y);
+							arrays.AddRect(x, y, Width, y2, cTopLeft2.X, cTopLeft2.Y, cBottomRight2.X, cBottomRight2.Y);
+							y = y2;
+						}
+
+						// create array entries for the middle
+						cTopLeft1 = new PointF((float)insets.Left / textureSize.Width, (float)insets.Top / textureSize.Height);
+						cBottomRight1 = new PointF((float)(imageSize.Width - insets.Right) / textureSize.Width, (float)(imageSize.Height - insets.Bottom) / textureSize.Height);
+						Point vBottomRight = new Point(Width - insets.Right, Height - insets.Bottom);
+						if (fillMiddle)
+						{
+							middleArrays.AllocRects(1, false, true);
+							middleArrays.AddRect(insets.Left, insets.Top, vBottomRight.X, vBottomRight.Y, middleColor);
+						}
+						else
+						{
+							y = insets.Top;
+							for (int i = 0; i < numLeftRight; i++)
 							{
-								int x2 = x + imageMiddleWidth;
-								arrays.AddRect(x, y, x2, y2, cTopLeft1.X, cTopLeft1.Y, cBottomRight1.X, cBottomRight1.Y);
+								x = insets.Left;
+								int y2 = y + imageMiddleHeight;
+								for (int j = 0; j < numTopBottom; j++)
+								{
+									int x2 = x + imageMiddleWidth;
+									arrays.AddRect(x, y, x2, y2, cTopLeft1.X, cTopLeft1.Y, cBottomRight1.X, cBottomRight1.Y);
+									x = x2;
+								}
+								y = y2;
+							}
+						}
+
+						// create array entries for the corners
+						arrays.AddRect(0, 0, insets.Left, insets.Top, 0, 0, cTopLeft1.X, cTopLeft1.Y);
+						arrays.AddRect(vBottomRight.X, 0, Width, insets.Top, cBottomRight1.X, 0, drawingSize.Width, cTopLeft1.Y);
+						arrays.AddRect(vBottomRight.X, vBottomRight.Y, Width, Height, cBottomRight1.X, cBottomRight1.Y, drawingSize.Width, drawingSize.Height);
+						arrays.AddRect(0, vBottomRight.Y, insets.Left, Height, 0, cBottomRight1.Y, cTopLeft1.X, drawingSize.Height);
+					}
+					else if (tile)
+					{
+						// get the number of rows and columns
+						int numRows = Height / imageSize.Height;
+						if (Height % imageSize.Height != 0) numRows++;
+						int numCols = Width / imageSize.Width;
+						if (Width % imageSize.Width != 0) numCols++;
+
+						// allocate array rectangles for each row and column
+						arrays.AllocRects(numRows * numCols, true, false);
+
+						// create array entries for each tile
+						int y = 0;
+						for (int row = 0; row < numRows; row++)
+						{
+							int y2 = y + imageSize.Height;
+							int x = 0;
+							for (int col = 0; col < numCols; col++)
+							{
+								int x2 = x + imageSize.Width;
+								arrays.AddRect(x, y, x2, y2, 0, 0, drawingSize.Width, drawingSize.Height);
 								x = x2;
 							}
 							y = y2;
 						}
 					}
-
-					// create array entries for the corners
-					arrays.AddRect(0, 0, insets.Left, insets.Top, 0, 0, cTopLeft1.X, cTopLeft1.Y);
-					arrays.AddRect(vBottomRight.X, 0, Width, insets.Top, cBottomRight1.X, 0, drawingSize.Width, cTopLeft1.Y);
-					arrays.AddRect(vBottomRight.X, vBottomRight.Y, Width, Height, cBottomRight1.X, cBottomRight1.Y, drawingSize.Width, drawingSize.Height);
-					arrays.AddRect(0, vBottomRight.Y, insets.Left, Height, 0, cBottomRight1.Y, cTopLeft1.X, drawingSize.Height);
-				}
-				else if (tile)
-				{
-					// get the number of rows and columns
-					int numRows = Height / imageSize.Height;
-					if (Height % imageSize.Height != 0) numRows++;
-					int numCols = Width / imageSize.Width;
-					if (Width % imageSize.Width != 0) numCols++;
-
-					// allocate array rectangles for each row and column
-					arrays.AllocRects(numRows * numCols, true, false);
-
-					// create array entries for each tile
-					int y = 0;
-					for (int row = 0; row < numRows; row++)
+					else
 					{
-						int y2 = y + imageSize.Height;
-						int x = 0;
-						for (int col = 0; col < numCols; col++)
-						{
-							int x2 = x + imageSize.Width;
-							arrays.AddRect(x, y, x2, y2, 0, 0, drawingSize.Width, drawingSize.Height);
-							x = x2;
-						}
-						y = y2;
+						// allocate one array rectangle
+						arrays.AllocRects(1, true, false);
+
+						// get the vertices
+						Point topLeft = new Point((int)(Width - imageSize.Width) / 2, (int)(Height - imageSize.Height) / 2);
+						Point bottomRight = new Point(topLeft.X + imageSize.Width, topLeft.Y + imageSize.Height);
+						//Console.WriteLine("Image: " + topLeft + "   " + bottomRight);
+
+						// add the rectangle
+						arrays.AddRect(topLeft.X, topLeft.Y, bottomRight.X, bottomRight.Y, 0, 0, drawingSize.Width, drawingSize.Height);
 					}
 				}
 				else
 				{
-					// allocate one array rectangle
-					arrays.AllocRects(1, true, false);
-
-					// get the vertices
-					Point topLeft = new Point((int)(Width - imageSize.Width) / 2, (int)(Height - imageSize.Height) / 2);
-					Point bottomRight = new Point(topLeft.X + imageSize.Width, topLeft.Y + imageSize.Height);
-					//Console.WriteLine("Image: " + topLeft + "   " + bottomRight);
-
-					// add the rectangle
-					arrays.AddRect(topLeft.X, topLeft.Y, bottomRight.X, bottomRight.Y, 0, 0, drawingSize.Width, drawingSize.Height);
+					arrays.Clear();
 				}
-			}
-			else
-			{
-				arrays.Clear();
-				middleArrays = null;
 			}
 		}
 
@@ -516,10 +516,7 @@ namespace FrozenNorth.OpenGL.FN2D
 			if (textureId != 0 && Visible && !imageSize.IsEmpty)
 			{
 				// draw the middle color arrays
-				if (middleArrays != null)
-				{
-					middleArrays.Draw();
-				}
+				middleArrays.Draw();
 
 				// draw the texture arrays
 				GL.BindTexture(TextureTarget.Texture2D, textureId);
