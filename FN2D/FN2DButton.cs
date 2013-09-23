@@ -51,14 +51,20 @@ namespace FrozenNorth.OpenGL.FN2D
 		protected Point titleOffsets = Point.Empty;
 
 		/// <summary>
-		/// Constructor - Creates a button based on five state images.
+		/// Constructor - Creates a colored button based on top and bottom colors.
 		/// </summary>
 		/// <param name="canvas">Canvas that the button is on.</param>
 		/// <param name="frame">Position and size of the button.</param>
-		/// <param name="title">Title of the control.</param>
+		/// <param name="cornerRadius">Corner radius.</param>
+		/// <param name="topColor">Top color.</param>
+		/// <param name="bottomColor">Bottom color.</param>
+		/// <param name="title">Title that appears on the button.</param>
 		public FN2DButton(FN2DCanvas canvas, Rectangle frame, int cornerRadius, Color topColor, Color bottomColor, string title = "")
 			: base(canvas, frame, cornerRadius, topColor, bottomColor)
 		{
+			// disable refreshing
+			RefreshEnabled = false;
+
 			// create the icon image
 			iconImage = new FN2DImage(canvas);
 			Add(iconImage);
@@ -70,37 +76,68 @@ namespace FrozenNorth.OpenGL.FN2D
 			Add(titleLabel);
 
 			// set the colors
-			this.topColor = topColor;
-			this.bottomColor = bottomColor;
-			topPressedColor = Lighten(topColor);
-			bottomPressedColor = Lighten(bottomColor);
-			topDisabledColor = Gray(topColor);
-			bottomDisabledColor = Gray(bottomColor);
+			TopColor = topColor;
+			BottomColor = bottomColor;
 
-			// set the images
-			Refresh();
+			// enable refreshing
+			RefreshEnabled = true;
 		}
 
+		/// <summary>
+		/// Constructor - Creates a colored button based on top and bottom colors using the default corner radius.
+		/// </summary>
+		/// <param name="canvas">Canvas that the button is on.</param>
+		/// <param name="frame">Position and size of the button.</param>
+		/// <param name="topColor">Top color.</param>
+		/// <param name="bottomColor">Bottom color.</param>
+		/// <param name="title">Title that appears on the button.</param>
 		public FN2DButton(FN2DCanvas canvas, Rectangle frame, Color topColor, Color bottomColor, string title = "")
 			: this(canvas, frame, FN2DCanvas.DefaultCornerRadius, topColor, bottomColor, title)
 		{
 		}
 
+		/// <summary>
+		/// Constructor - Creates a colored button based on a single color using the default corner radius.
+		/// </summary>
+		/// <param name="canvas">Canvas that the button is on.</param>
+		/// <param name="frame">Position and size of the button.</param>
+		/// <param name="color">Top and bottom color.</param>
+		/// <param name="title">Title that appears on the button.</param>
 		public FN2DButton(FN2DCanvas canvas, Rectangle frame, Color color, string title = "")
 			: this(canvas, frame, FN2DCanvas.DefaultCornerRadius, color, color, title)
 		{
 		}
 
+		/// <summary>
+		/// Constructor - Creates a colored button based on the default top
+		///               and bottom colors using the default corner radius.
+		/// </summary>
+		/// <param name="canvas">Canvas that the button is on.</param>
+		/// <param name="frame">Position and size of the button.</param>
+		/// <param name="title">Title that appears on the button.</param>
 		public FN2DButton(FN2DCanvas canvas, Rectangle frame, string title = "")
 			: this(canvas, frame, FN2DCanvas.DefaultCornerRadius, FN2DCanvas.DefaultTopColor, FN2DCanvas.DefaultBottomColor, title)
 		{
 		}
 
+		/// <summary>
+		/// Constructor - Creates a colored button based on the default
+		///               top and bottom colors using the default corner radius.
+		/// </summary>
+		/// <param name="canvas">Canvas that the button is on.</param>
+		/// <param name="size">Size of the button.</param>
+		/// <param name="title">Title that appears on the button.</param>
 		public FN2DButton(FN2DCanvas canvas, Size size, string title = "")
 			: this(canvas, new Rectangle(Point.Empty, size), title)
 		{
 		}
 
+		/// <summary>
+		/// Constructor - Creates a colored button based on the default top and
+		///               bottom colors using the default corner radius and size.
+		/// </summary>
+		/// <param name="canvas">Canvas that the button is on.</param>
+		/// <param name="title">Title that appears on the button.</param>
 		public FN2DButton(FN2DCanvas canvas, string title = "")
 			: this(canvas, FN2DCanvas.DefaultButtonSize, title)
 		{
@@ -137,99 +174,102 @@ namespace FrozenNorth.OpenGL.FN2D
 		/// </summary>
 		public override void Refresh()
 		{
-			base.Refresh();
+			if (refreshEnabled)
+			{
+				base.Refresh();
 
-			// don't do anyhting until the control has been fully created
-			if (iconImage == null || titleLabel == null)
-			{
-				return;
-			}
-
-			// set the background colors
-			if (!Enabled)
-			{
-				background.SetColors(topDisabledColor, bottomDisabledColor);
-			}
-			else if (touching)
-			{
-				if (selected)
+				// don't do anyhting until the control has been fully created
+				if (iconImage == null || titleLabel == null)
 				{
-					background.SetColors(topColor, bottomColor);
+					return;
 				}
-				else
+
+				// set the background colors
+				if (!Enabled)
+				{
+					background.SetColors(topDisabledColor, bottomDisabledColor);
+				}
+				else if (touching)
+				{
+					if (selected)
+					{
+						background.SetColors(topColor, bottomColor);
+					}
+					else
+					{
+						background.SetColors(topPressedColor, bottomPressedColor);
+					}
+				}
+				else if (selected)
 				{
 					background.SetColors(topPressedColor, bottomPressedColor);
 				}
-			}
-			else if (selected)
-			{
-				background.SetColors(topPressedColor, bottomPressedColor);
-			}
-			else
-			{
-				background.SetColors(topColor, bottomColor);
-			}
-
-			// set the icon image
-			if (selected && selectedIcon != null)
-			{
-				iconImage.Image = Enabled ? selectedIcon : (disabledSelectedIcon ?? selectedIcon);
-			}
-			else
-			{
-				iconImage.Image = Enabled ? normalIcon : (disabledIcon ?? normalIcon);
-			}
-
-			// show/hide the icon and label
-			iconImage.Visible = iconImage.Image != null;
-			titleLabel.Visible = !string.IsNullOrEmpty(titleLabel.Text);
-
-			// if there's an icon
-			if (iconImage.Visible)
-			{
-				// if there's a title, position the icon relative to it
-				if (titleLabel.Visible)
-				{
-					int width = titleLabel.Width + iconImage.Width + IconTextPadding;
-					int height = titleLabel.Height + iconImage.Height + IconTextPadding;
-					int x = (Width - width) / 2;
-					int y = (Height - height) / 2;
-					Point iconLocation = Point.Empty;
-					Point titleLocation = Point.Empty;
-					switch (iconAlignment)
-					{
-						case FN2DIconAlignment.Left:
-							iconLocation = new Point(x, (Height - iconImage.Height) / 2);
-							titleLocation = new Point(x + iconImage.Width + IconTextPadding, (Height - titleLabel.Height) / 2);
-							break;
-						case FN2DIconAlignment.Right:
-							iconLocation = new Point(x + titleLabel.Width + IconTextPadding, (Height - iconImage.Height) / 2);
-							titleLocation = new Point(x, (Height - titleLabel.Height) / 2);
-							break;
-						case FN2DIconAlignment.Above:
-							iconLocation = new Point((Width - iconImage.Width) / 2, y);
-							titleLocation = new Point((Width - titleLabel.Width) / 2, y + iconImage.Height + IconTextPadding);
-							break;
-						case FN2DIconAlignment.Below:
-							iconLocation = new Point((Width - iconImage.Width) / 2, y + titleLabel.Height + IconTextPadding);
-							titleLocation = new Point((Width - titleLabel.Width) / 2, y);
-							break;
-					}
-					iconImage.Location = iconLocation;
-					titleLabel.Location = titleLocation;
-				}
-
-				// otherwise just center the icon
 				else
 				{
-					iconImage.Location = new Point((Width - iconImage.Width) / 2 + iconOffsets.X, (Height - iconImage.Height) / 2 + iconOffsets.Y);
+					background.SetColors(topColor, bottomColor);
 				}
-			}
 
-			// if there's a title, center it
-			else if (titleLabel.Visible)
-			{
-				titleLabel.Location = new Point((Width - titleLabel.Width) / 2 + titleOffsets.X, (Height - titleLabel.Height) / 2 + titleOffsets.Y);
+				// set the icon image
+				if (selected && selectedIcon != null)
+				{
+					iconImage.Image = Enabled ? selectedIcon : (disabledSelectedIcon ?? selectedIcon);
+				}
+				else
+				{
+					iconImage.Image = Enabled ? normalIcon : (disabledIcon ?? normalIcon);
+				}
+
+				// show/hide the icon and label
+				iconImage.Visible = iconImage.Image != null;
+				titleLabel.Visible = !string.IsNullOrEmpty(titleLabel.Text);
+
+				// if there's an icon
+				if (iconImage.Visible)
+				{
+					// if there's a title, position the icon relative to it
+					if (titleLabel.Visible)
+					{
+						int width = titleLabel.Width + iconImage.Width + IconTextPadding;
+						int height = titleLabel.Height + iconImage.Height + IconTextPadding;
+						int x = (Width - width) / 2;
+						int y = (Height - height) / 2;
+						Point iconLocation = Point.Empty;
+						Point titleLocation = Point.Empty;
+						switch (iconAlignment)
+						{
+							case FN2DIconAlignment.Left:
+								iconLocation = new Point(x, (Height - iconImage.Height) / 2);
+								titleLocation = new Point(x + iconImage.Width + IconTextPadding, (Height - titleLabel.Height) / 2);
+								break;
+							case FN2DIconAlignment.Right:
+								iconLocation = new Point(x + titleLabel.Width + IconTextPadding, (Height - iconImage.Height) / 2);
+								titleLocation = new Point(x, (Height - titleLabel.Height) / 2);
+								break;
+							case FN2DIconAlignment.Above:
+								iconLocation = new Point((Width - iconImage.Width) / 2, y);
+								titleLocation = new Point((Width - titleLabel.Width) / 2, y + iconImage.Height + IconTextPadding);
+								break;
+							case FN2DIconAlignment.Below:
+								iconLocation = new Point((Width - iconImage.Width) / 2, y + titleLabel.Height + IconTextPadding);
+								titleLocation = new Point((Width - titleLabel.Width) / 2, y);
+								break;
+						}
+						iconImage.Location = iconLocation;
+						titleLabel.Location = titleLocation;
+					}
+
+					// otherwise just center the icon
+					else
+					{
+						iconImage.Location = new Point((Width - iconImage.Width) / 2 + iconOffsets.X, (Height - iconImage.Height) / 2 + iconOffsets.Y);
+					}
+				}
+
+				// if there's a title, center it
+				else if (titleLabel.Visible)
+				{
+					titleLabel.Location = new Point((Width - titleLabel.Width) / 2 + titleOffsets.X, (Height - titleLabel.Height) / 2 + titleOffsets.Y);
+				}
 			}
 		}
 
@@ -258,6 +298,104 @@ namespace FrozenNorth.OpenGL.FN2D
 		{
 			base.TouchCancel(e);
 			Refresh();
+		}
+
+		/// <summary>
+		/// Gets or sets the top background color.
+		/// </summary>
+		public override Color TopColor
+		{
+			get { return topColor; }
+			set
+			{
+				topColor = value;
+				if (topColor != Color.Transparent)
+				{
+					topPressedColor = Lighten(topColor);
+					topDisabledColor = Gray(topColor);
+				}
+				else
+				{
+					topPressedColor = Color.Transparent;
+					topDisabledColor = Color.Transparent;
+				}
+				Refresh();
+			}
+		}
+
+		/// <summary>
+		/// Gets or sets the bottom background color.
+		/// </summary>
+		public override Color BottomColor
+		{
+			get { return bottomColor; }
+			set
+			{
+				bottomColor = value;
+				if (bottomColor != Color.Transparent)
+				{
+					bottomPressedColor = Lighten(bottomColor);
+					bottomDisabledColor = Gray(bottomColor);
+				}
+				else
+				{
+					bottomPressedColor = Color.Transparent;
+					bottomDisabledColor = Color.Transparent;
+				}
+				Refresh();
+			}
+		}
+
+		/// <summary>
+		/// Gets or sets the top color when the button is pressed.
+		/// </summary>
+		public Color TopPressedColor
+		{
+			get { return topPressedColor; }
+			set
+			{
+				topPressedColor = value;
+				Refresh();
+			}
+		}
+
+		/// <summary>
+		/// Gets or sets the bottom color when the button is pressed.
+		/// </summary>
+		public Color BottomPressedColor
+		{
+			get { return bottomPressedColor; }
+			set
+			{
+				bottomPressedColor = value;
+				Refresh();
+			}
+		}
+
+		/// <summary>
+		/// Gets or sets the top color when the button is disabled.
+		/// </summary>
+		public Color TopDisabledColor
+		{
+			get { return topDisabledColor; }
+			set
+			{
+				topDisabledColor = value;
+				Refresh();
+			}
+		}
+
+		/// <summary>
+		/// Gets or sets the bottom color when the button is disabled.
+		/// </summary>
+		public Color BottomDisabledColor
+		{
+			get { return bottomDisabledColor; }
+			set
+			{
+				bottomDisabledColor = value;
+				Refresh();
+			}
 		}
 
 		/// <summary>
