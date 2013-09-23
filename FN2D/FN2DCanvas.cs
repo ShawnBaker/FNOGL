@@ -95,7 +95,7 @@ namespace FrozenNorth.OpenGL.FN2D
 			Size = size;
 
 			// initialize the font system
-			FN2DFont.InitFontManager(fontPath);
+			FN2DFont.OpenFontManager(fontPath);
 			FN2DFont font = FN2DFont.Load(this, DefaultFontName, DefaultFontSize);
 			font.LoadGlyphs(FontPreloadCharacters);
 			font = FN2DFont.Load(this, DefaultBoldFontName, DefaultFontSize);
@@ -127,6 +127,8 @@ namespace FrozenNorth.OpenGL.FN2D
 				if (rootControl != null) rootControl.Dispose();
 			}
 			rootControl = null;
+			FN2DFont.CloseFontManager();
+			FN2DArrays.CloseArraysManager();
 			base.Dispose(disposing);
 		}
 
