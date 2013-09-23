@@ -84,8 +84,8 @@ namespace FrozenNorth.OpenGL.FN2D
 			textureSize = new Size(packer.binWidth, packer.binHeight);
 			Size = new Size(packer.binWidth, packer.binHeight);
 
-			// create the texture
-			CreateTexture();
+			// allocate the texture
+			AllocateTexture();
 
 			// refresh the arrays
 			Refresh();
@@ -112,27 +112,29 @@ namespace FrozenNorth.OpenGL.FN2D
 		}
 
 		/// <summary>
-		/// Sets the color and draws the atlas.
+		/// Adds colors to the basic image arrays.
 		/// </summary>
-		public override void Draw()
+		public override void Refresh()
 		{
-			GL.Color4(255, 255, 255, 255);
-			base.Draw();
+			if (refreshEnabled)
+			{
+				base.Refresh();
+				arrays.AddRectColors(Color.White);
+			}
 		}
 
 		/// <summary>
-		/// Creates the texture.
+		/// Allocates the texture.
 		/// </summary>
-		private void CreateTexture()
+		private void AllocateTexture()
 		{
-			if (textureId != 0)
+			// create the texture if necessary
+			if (textureId == 0)
 			{
-				GL.DeleteTextures(1, ref textureId);
-				textureId = 0;
+				GL.GenTextures(1, out textureId);
 			}
 
-			// create the texture
-			GL.GenTextures(1, out textureId);
+			// bind, configure and allocate the texture
 			GL.BindTexture(TextureTarget.Texture2D, textureId);
 			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Linear);
 			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Linear);
@@ -295,7 +297,7 @@ namespace FrozenNorth.OpenGL.FN2D
 					GL.BindTexture(TextureTarget.Texture2D, textureId);
 					GL.GetTexImage(TextureTarget.Texture2D, 0, pixelFormat, PixelType.UnsignedByte, dataPtr);
 #endif
-					CreateTexture();
+					AllocateTexture();
 					GL.BindTexture(TextureTarget.Texture2D, textureId);
 
 					// copy the region data
