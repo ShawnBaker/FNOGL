@@ -19,14 +19,17 @@ namespace FrozenNorth.TestFN2D
 		{
 			base.OnMouseWheel(e);
 
-			image.Zoom = image.Zoom + e.Delta * 0.1f / 120;
+			if (image != null)
+			{
+				image.Zoom = image.Zoom + e.Delta * 0.1f / 120;
+			}
 		}
 
 		protected override void OnMouseDown(MouseEventArgs e)
 		{
 			base.OnMouseDown(e);
 
-			if (e.Button == MouseButtons.Right)
+			if (e.Button == MouseButtons.Right && image != null)
 			{
 				panning = true;
 				startPan = image.Pan;

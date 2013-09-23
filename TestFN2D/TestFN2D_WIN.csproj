@@ -40,7 +40,9 @@
     <Compile Include="Canvas.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Canvas_WIN.cs" />
+    <Compile Include="Canvas_WIN.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -72,7 +74,9 @@
     <None Include="Fonts\Vera.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Fonts\VeraBd.ttf" />
+    <None Include="Fonts\VeraBd.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FN2D\FN2D_WIN.csproj">

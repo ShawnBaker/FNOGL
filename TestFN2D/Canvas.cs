@@ -40,6 +40,7 @@ namespace FrozenNorth.TestFN2D
 		protected FN2DLabel label;
 		protected FN2DImageButton button;
 		protected FN2DButton btn;
+		protected FN2DMessage message;
 		protected int ticks = 0;
 
 		public Canvas(Size size, string fontPath = null)
@@ -110,40 +111,62 @@ namespace FrozenNorth.TestFN2D
 			StartDrawTimer();
 		}
 
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				if (message != null) message.Dispose();
+			}
+			message = null;
+			base.Dispose(disposing);
+		}
+
 		public override void Refresh()
 		{
 			base.Refresh();
-			image.Size = Size;
-			image.Fill();
+			if (image != null)
+			{
+				image.Size = Size;
+				image.Fill();
+			}
 		}
 
 		public override void Draw(bool force = false)
 		{
 			// cycle the rotating image through 360 degrees
-			float angle = rotating.Rotation + 2;
-			rotating.Rotation = (angle < 360) ? angle : 0;
+			if (rotating != null)
+			{
+				float angle = rotating.Rotation + 2;
+				rotating.Rotation = (angle < 360) ? angle : 0;
+			}
 
 			// cycle through the label alignments
 			if (++ticks % 50 == 0)
 			{
-				switch (label.Alignment)
+				if (label != null)
 				{
-					case FN2DTextAlignment.TopLeft: label.Alignment = FN2DTextAlignment.TopCenter; break;
-					case FN2DTextAlignment.TopCenter: label.Alignment = FN2DTextAlignment.TopRight; break;
-					case FN2DTextAlignment.TopRight: label.Alignment = FN2DTextAlignment.MiddleLeft; break;
-					case FN2DTextAlignment.MiddleLeft: label.Alignment = FN2DTextAlignment.MiddleCenter; break;
-					case FN2DTextAlignment.MiddleCenter: label.Alignment = FN2DTextAlignment.MiddleRight; break;
-					case FN2DTextAlignment.MiddleRight: label.Alignment = FN2DTextAlignment.BottomLeft; break;
-					case FN2DTextAlignment.BottomLeft: label.Alignment = FN2DTextAlignment.BottomCenter; break;
-					case FN2DTextAlignment.BottomCenter: label.Alignment = FN2DTextAlignment.BottomRight; break;
-					case FN2DTextAlignment.BottomRight: label.Alignment = FN2DTextAlignment.TopLeft; break;
+					switch (label.Alignment)
+					{
+						case FN2DTextAlignment.TopLeft: label.Alignment = FN2DTextAlignment.TopCenter; break;
+						case FN2DTextAlignment.TopCenter: label.Alignment = FN2DTextAlignment.TopRight; break;
+						case FN2DTextAlignment.TopRight: label.Alignment = FN2DTextAlignment.MiddleLeft; break;
+						case FN2DTextAlignment.MiddleLeft: label.Alignment = FN2DTextAlignment.MiddleCenter; break;
+						case FN2DTextAlignment.MiddleCenter: label.Alignment = FN2DTextAlignment.MiddleRight; break;
+						case FN2DTextAlignment.MiddleRight: label.Alignment = FN2DTextAlignment.BottomLeft; break;
+						case FN2DTextAlignment.BottomLeft: label.Alignment = FN2DTextAlignment.BottomCenter; break;
+						case FN2DTextAlignment.BottomCenter: label.Alignment = FN2DTextAlignment.BottomRight; break;
+						case FN2DTextAlignment.BottomRight: label.Alignment = FN2DTextAlignment.TopLeft; break;
+					}
 				}
-				switch (button.IconAlignment)
+				if (button != null)
 				{
-					case FN2DIconAlignment.Left: button.IconAlignment = FN2DIconAlignment.Above; break;
-					case FN2DIconAlignment.Above: button.IconAlignment = FN2DIconAlignment.Right; break;
-					case FN2DIconAlignment.Right: button.IconAlignment = FN2DIconAlignment.Below; break;
-					case FN2DIconAlignment.Below: button.IconAlignment = FN2DIconAlignment.Left; break;
+					switch (button.IconAlignment)
+					{
+						case FN2DIconAlignment.Left: button.IconAlignment = FN2DIconAlignment.Above; break;
+						case FN2DIconAlignment.Above: button.IconAlignment = FN2DIconAlignment.Right; break;
+						case FN2DIconAlignment.Right: button.IconAlignment = FN2DIconAlignment.Below; break;
+						case FN2DIconAlignment.Below: button.IconAlignment = FN2DIconAlignment.Left; break;
+					}
 				}
 			}
 
@@ -173,7 +196,12 @@ namespace FrozenNorth.TestFN2D
 
 		private void HandleBlueButtonTapped(object sender, EventArgs e)
 		{
-			FN2DMessage message = new FN2DMessage(this, "This is a test message just for you.\nNot long, but multi-line.");
+			if (message != null)
+			{
+				message.Dispose();
+				message = null;
+			}
+			message = new FN2DMessage(this, "This is a test message just for you.\nNot long, but multi-line.");
 			ShowModal(message);
 		}
 
