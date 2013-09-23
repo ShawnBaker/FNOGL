@@ -53,19 +53,24 @@ namespace FrozenNorth.OpenGL.FN2D
 								FN2DBitmap selectedImage, FN2DBitmap disabledSelectedImage)
 			: base(canvas, new Rectangle(0, 0, (int)normalImage.Size.Width, (int)normalImage.Size.Height))
 		{
-			// save the parameters
-			this.normalImage = normalImage;
-			this.pressedImage = pressedImage;
-			this.disabledImage = disabledImage;
-			this.selectedImage = selectedImage;
-			this.disabledSelectedImage = disabledSelectedImage;
+			// disable refreshing
+			RefreshEnabled = false;
+
+			// set the images
+			NormalImage = normalImage;
+			PressedImage = pressedImage;
+			DisabledImage = disabledImage;
+			SelectedImage = selectedImage;
+			DisabledSelectedImage = disabledSelectedImage;
 
 			// configure the background
+			TopColor = Color.Transparent;
+			BottomColor = Color.Transparent;
 			BackgroundColor = Color.Transparent;
 			BackgroundImage = normalImage;
 
-			// set the images
-			Refresh();
+			// enable refreshing
+			RefreshEnabled = true;
 		}
 
 		/// <summary>
@@ -125,32 +130,36 @@ namespace FrozenNorth.OpenGL.FN2D
 		/// </summary>
 		public override void Refresh()
 		{
-			base.Refresh();
+			if (refreshEnabled)
+			{
+				base.Refresh();
 
-			// don't do anything until the control has been fully created
-			if (backgroundImage == null)
-			{
-				return;
-			}
+				// don't do anything until the control has been fully created
+				if (backgroundImage == null)
+				{
+					return;
+				}
 
-			// get the background image
-			FN2DBitmap image = null;
-			if (!Enabled)
-			{
-				image = (selected && disabledSelectedImage != null) ? disabledSelectedImage : disabledImage;
-			}
-			else if (selected)
-			{
-				image = touching ? normalImage : (selectedImage ?? (pressedImage ?? normalImage));
-			}
-			else
-			{
-				image = touching ? (pressedImage ?? normalImage) : normalImage;
-			}
+				// get the background image
+				FN2DBitmap image = null;
+				if (!Enabled)
+				{
+					image = (selected && disabledSelectedImage != null) ? disabledSelectedImage : disabledImage;
+				}
+				else if (selected)
+				{
+					image = touching ? normalImage : (selectedImage ?? (pressedImage ?? normalImage));
+				}
+				else
+				{
+					image = touching ? (pressedImage ?? normalImage) : normalImage;
+				}
 
-			// set the background image
-			backgroundImage.Image = image;
-			backgroundImage.Size = Size;
+				// set the background image
+				backgroundImage.Image = image;
+				backgroundImage.Size = Size;
+				background.Color = Color.Transparent;
+			}
 		}
 
 		/// <summary>
