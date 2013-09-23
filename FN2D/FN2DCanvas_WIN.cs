@@ -115,7 +115,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		/// </summary>
 		protected override void OnPaintBackground(PaintEventArgs e)
 		{
-			//base.OnPaintBackground(e);
+			IsDirty = true;
 		}
 
 		/// <summary>
@@ -123,7 +123,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		/// </summary>
 		protected override void OnPaint(PaintEventArgs e)
 		{
-			//base.OnPaint(e);
+			IsDirty = true;
 		}
 
 		/// <summary>
