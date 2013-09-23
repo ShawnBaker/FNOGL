@@ -65,7 +65,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		/// <summary>
 		/// Initializes the font system.
 		/// </summary>
-		public static bool InitFontManager(string path = null)
+		public static bool OpenFontManager(string path = null)
 		{
 			if (fontPath == null)
 			{
@@ -84,6 +84,23 @@ namespace FrozenNorth.OpenGL.FN2D
 		}
 
 		/// <summary>
+		/// Cleans up the font system.
+		/// </summary>
+		public static void CloseFontManager()
+		{
+			if (fonts != null)
+			{
+				for (int i = fonts.Count - 1; i >= 0; i--)
+				{
+					FN2DFont font = fonts[i];
+					fonts.RemoveAt(i);
+					font.Dispose();
+				}
+				fonts = null;
+			}
+		}
+
+		/// <summary>
 		/// Creates a new face at a specific size.
 		/// </summary>
 		/// <param name="canvas">Canvas that the font is used within.</param>
@@ -91,7 +108,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		/// <param name="size">Size of the font.</param>
 		public static FN2DFont Load(FN2DCanvas canvas, string faceName, float size)
 		{
-			InitFontManager();
+			OpenFontManager();
 
 			FN2DFont font = fonts.Find(delegate (FN2DFont f) { return f.faceName == faceName && f.size == size; });
 			if (font == null)
