@@ -22,6 +22,7 @@
 *
 *******************************************************************************/
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Runtime.InteropServices;
 #if FN2D_WIN
@@ -47,13 +48,19 @@ namespace FrozenNorth.OpenGL.FN2D
 	/// </summary>
 	public class FN2DArrays : IDisposable
 	{
+		// public constants
+		public const int DefaultAllocationIncrement = 64;
+
 		// internal types
 #if FN2D_WIN
 		protected static DrawElementsType UnsignedIntElement = DrawElementsType.UnsignedInt;
 #elif FN2D_IOS
 		protected static All UnsignedIntElement = All.UnsignedIntOes;
 #endif
-		// static variables
+		// font system variables
+		private static FN2DArraysList arrays = null;
+
+		// capabilities variables
 		private static bool usingVBO = false;
 		private static bool usingOESVBO = false;
 		private static bool gotUsingVBO = false;
@@ -75,9 +82,90 @@ namespace FrozenNorth.OpenGL.FN2D
 		private bool changed;
 
 		/// <summary>
+		/// Initializes the arrays system.
+		/// </summary>
+		public static bool OpenArraysManager(string path = null)
+		{
+			if (arrays == null)
+			{
+				arrays = new FN2DArraysList();
+			}
+			return true;
+		}
+
+		/// <summary>
+		/// Cleans up the arrays system.
+		/// </summary>
+		public static void CloseArraysManager()
+		{
+			if (arrays != null)
+			{
+				for (int i = arrays.Count - 1; i >= 0; i--)
+				{
+					FN2DArrays arr = arrays[i];
+					arrays.RemoveAt(i);
+					arr.Dispose();
+				}
+				arrays = null;
+			}
+		}
+
+		/// <summary>
+		/// Creates an empty set of arrays.
+		/// </summary>
+		/// <param name="drawMode">OpenGL drawing mode.</param>
+		/// <param name="allocInc">Allocation increment.</param>
+		/// <returns>A new FN2DArrays object.</returns>
+		public static FN2DArrays Create(BeginMode drawMode = BeginMode.Triangles, int allocInc = DefaultAllocationIncrement)
+		{
+			OpenArraysManager();
+
+			FN2DArrays arr = new FN2DArrays(drawMode, allocInc);
+			if (arr != null)
+			{
+				arrays.Add(arr);
+			}
+			return arr;
+		}
+
+		/// <summary>
+		/// Destroys an existing set of arrays and creates a new, empty set
+		/// of arrays with the same drawing mode and allocation increment.
+		/// </summary>
+		/// <param name="arr">Set of arrays to be destroyed. Can be null.</param>
+		/// <returns>A new FN2DArrays object.</returns>
+		public static FN2DArrays Create(FN2DArrays arr)
+		{
+			BeginMode drawMode = BeginMode.Triangles;
+			int allocInc = DefaultAllocationIncrement;
+			if (arr != null)
+			{
+				drawMode = arr.DrawMode;
+				allocInc = arr.AllocationIncrement;
+			}
+			Destroy(arr);
+			return Create(drawMode, allocInc);
+		}
+
+		/// <summary>
+		/// Destroys a set of arrays.
+		/// </summary>
+		/// <param name="arr">Sets of arrays to be destroyed.</param>
+		public static void Destroy(FN2DArrays arr)
+		{
+			if (arrays != null && arr != null)
+			{
+				arrays.Remove(arr);
+				arr.Dispose();
+			}
+		}
+
+		/// <summary>
 		/// Constructor - Creates an empty set of arrays.
 		/// </summary>
-		public FN2DArrays(BeginMode drawMode = BeginMode.Triangles, int allocInc = 64)
+		/// <param name="drawMode">OpenGL drawing mode.</param>
+		/// <param name="allocInc">Allocation increment.</param>
+		private FN2DArrays(BeginMode drawMode = BeginMode.Triangles, int allocInc = 64)
 		{
 			this.drawMode = drawMode;
 			this.allocInc = allocInc;
@@ -106,16 +194,20 @@ namespace FrozenNorth.OpenGL.FN2D
 		/// </summary>
 		protected virtual void Dispose(bool disposing)
 		{
+			if (disposing)
+			{
 			// delete the buffers
-			if (arrayId != 0)
-			{
-				GL.DeleteBuffers(1, ref arrayId);
-				arrayId = 0;
-			}
-			if (indexId != 0)
-			{
-				GL.DeleteBuffers(1, ref indexId);
-				indexId = 0;
+				if (arrayId != 0)
+				{
+					GL.DeleteBuffers(1, ref arrayId);
+					arrayId = 0;
+				}
+				if (indexId != 0)
+				{
+					GL.DeleteBuffers(1, ref indexId);
+					indexId = 0;
+				}
+				arrays.Remove(this);
 			}
 
 			// clear the arrays
@@ -135,7 +227,14 @@ namespace FrozenNorth.OpenGL.FN2D
 					GL.GenBuffers(1, out arrayId);
 				}
 				GL.BindBuffer(BufferTarget.ArrayBuffer, arrayId);
-				GL.BufferData<FN2DVertex>(BufferTarget.ArrayBuffer, (IntPtr)(Marshal.SizeOf(buffer[0]) * numVertices), buffer, BufferUsageHint.DynamicDraw);
+				if (numVertices != 0)
+				{
+					GL.BufferData<FN2DVertex>(BufferTarget.ArrayBuffer, (IntPtr)(Marshal.SizeOf(buffer[0]) * numVertices), buffer, BufferUsageHint.DynamicDraw);
+				}
+				else
+				{
+					GL.BufferData(BufferTarget.ArrayBuffer, IntPtr.Zero, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+				}
 				GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 
 				// create, bind and upload the indices to a buffer
@@ -144,7 +243,14 @@ namespace FrozenNorth.OpenGL.FN2D
 					GL.GenBuffers(1, out indexId);
 				}
 				GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexId);
-				GL.BufferData<uint>(BufferTarget.ElementArrayBuffer, (IntPtr)(Marshal.SizeOf(indices[0]) * numIndices), indices, BufferUsageHint.DynamicDraw);
+				if (numIndices != 0)
+				{
+					GL.BufferData<uint>(BufferTarget.ElementArrayBuffer, (IntPtr)(Marshal.SizeOf(indices[0]) * numIndices), indices, BufferUsageHint.DynamicDraw);
+				}
+				else
+				{
+					GL.BufferData(BufferTarget.ElementArrayBuffer, IntPtr.Zero, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+				}
 				GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
 			}
 			changed = false;
@@ -603,6 +709,15 @@ namespace FrozenNorth.OpenGL.FN2D
 		}
 
 		/// <summary>
+		/// Gets or sets the allocation increment.
+		/// </summary>
+		public int AllocationIncrement
+		{
+			get { return allocInc; }
+			set { allocInc = value; }
+		}
+
+		/// <summary>
 		/// Draws the arrays.
 		/// </summary>
 		public void Draw()
@@ -696,20 +811,20 @@ namespace FrozenNorth.OpenGL.FN2D
 					foreach (byte item in colors) Console.Write(" " + item); Console.WriteLine();
 					foreach (int item in indices) Console.Write(" " + item); Console.WriteLine();
 					*/
-				}
 
-				// clear the arrays
-				if (numVertices != 0)
-				{
-					GL.VertexPointer(2, VertexPointerType.Float, 0, IntPtr.Zero);
-				}
-				if (numTexCoords != 0)
-				{
-					GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, IntPtr.Zero);
-				}
-				if (numColors != 0)
-				{
-					GL.ColorPointer(4, ColorPointerType.UnsignedByte, 0, IntPtr.Zero);
+					// clear the arrays
+					if (numVertices != 0)
+					{
+						GL.VertexPointer(2, VertexPointerType.Float, 0, IntPtr.Zero);
+					}
+					if (numTexCoords != 0)
+					{
+						GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, IntPtr.Zero);
+					}
+					if (numColors != 0)
+					{
+						GL.ColorPointer(4, ColorPointerType.UnsignedByte, 0, IntPtr.Zero);
+					}
 				}
 
 				// disable the arrays
@@ -738,6 +853,11 @@ namespace FrozenNorth.OpenGL.FN2D
 			}
 		}
 	}
+
+	/// <summary>
+	/// OpenGL 2D list of arrays.
+	/// </summary>
+	public class FN2DArraysList : List<FN2DArrays> { };
 
 	/// <summary>
 	/// OpenGL 2D vertex used for VBO access.
