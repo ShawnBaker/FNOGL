@@ -61,6 +61,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		protected bool touching = false;
 		protected bool enabled = true;
 		protected bool visible = true;
+		protected bool refreshEnabled = true;
 		protected int tag = 0;
 
 		/// <summary>
@@ -730,6 +731,25 @@ namespace FrozenNorth.OpenGL.FN2D
 		}
 
 		/// <summary>
+		/// Gets or sets whether or not refreshing is enabled.
+		/// </summary>
+		public virtual bool RefreshEnabled
+		{
+			get { return refreshEnabled; }
+			set
+			{
+				if (value != refreshEnabled)
+				{
+					refreshEnabled = value;
+					if (refreshEnabled)
+					{
+						Refresh();
+					}
+				}
+			}
+		}
+
+		/// <summary>
 		/// Gets or sets whether or not touch input is enabled.
 		/// </summary>
 		public virtual bool TouchEnabled
@@ -796,16 +816,19 @@ namespace FrozenNorth.OpenGL.FN2D
 		/// </summary>
 		public virtual void Refresh()
 		{
-			// set the background sizes
-			background.Frame = new Rectangle(Point.Empty, Size);
-			if (backgroundImage != null)
+			if (refreshEnabled)
 			{
-				backgroundImage.Size = Size;
-				backgroundImage.Fill();
-			}
+				// set the background sizes
+				background.Frame = new Rectangle(Point.Empty, Size);
+				if (backgroundImage != null)
+				{
+					backgroundImage.Size = Size;
+					backgroundImage.Fill();
+				}
 
-			// set the dirty flag
-			canvas.IsDirty = true;
+				// set the dirty flag
+				canvas.IsDirty = true;
+			}
 		}
 
 		/// <summary>
