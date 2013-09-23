@@ -44,7 +44,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		protected FN2DFont font = null;
 		protected Color textColor = Color.White;
 		protected Color disabledTextColor = Color.Gray;
-		protected FN2DArrays[] arrays;
+		protected FN2DArraysList arrays = new FN2DArraysList();
 		protected SizeF textSize;
 		protected bool autoSize = false;
 		protected FN2DTextAlignment alignment = FN2DTextAlignment.Center | FN2DTextAlignment.Middle;
@@ -73,14 +73,7 @@ namespace FrozenNorth.OpenGL.FN2D
 			// if we got here via Dispose(), call Dispose() on the member objects
 			if (disposing)
 			{
-				if (font != null) font.Dispose();
-				if (arrays != null)
-				{
-					foreach (FN2DArrays a in arrays)
-					{
-						a.Dispose();
-					}
-				}
+				DisposeArrays();
 			}
 
 			// clear the object references
@@ -94,6 +87,21 @@ namespace FrozenNorth.OpenGL.FN2D
 		}
 
 		/// <summary>
+		/// Calls Dispose() on all the arrays.
+		/// </summary>
+		private void DisposeArrays()
+		{
+			if (arrays != null)
+			{
+				foreach (FN2DArrays a in arrays)
+				{
+					a.Dispose();
+				}
+				arrays.Clear();
+			}
+		}
+
+		/// <summary>
 		/// Gets or sets the text.
 		/// </summary>
 		public string Text
@@ -103,10 +111,10 @@ namespace FrozenNorth.OpenGL.FN2D
 			{
 				text = (value != null) ? value : "";
 				lines = text.Split(new char[] { '\n' });
-				arrays = new FN2DArrays[lines.Length];
+				DisposeArrays();
 				for (int i = 0; i < lines.Length; i++)
 				{
-					arrays[i] = new FN2DArrays();
+					arrays.Add(FN2DArrays.Create());
 				}
 				Refresh();
 			}
@@ -201,71 +209,74 @@ namespace FrozenNorth.OpenGL.FN2D
 		/// </summary>
 		public override void Refresh()
 		{
-			base.Refresh();
-
-			if (font != null && text != null && text.Length != 0)
+			if (refreshEnabled)
 			{
-				// get the arrays
-				textSize = Size.Empty;
-				SizeF[] sizes = new SizeF[lines.Length];
-				float lineHeight = 0;
-				for (int i = 0; i < lines.Length; i++)
-				{
-					if (lines[i].Length != 0 && lines[i][lines[i].Length - 1] == '\r')
-					{
-						lines[i] = lines[i].Substring(0, lines[i].Length - 1);
-					}
-					sizes[i] = font.GetArrays(arrays[i], lines[i], Enabled ? textColor : disabledTextColor);
-					if (sizes[i].Width > textSize.Width)
-					{
-						textSize.Width = sizes[i].Width;
-					}
-					if (sizes[i].Height > lineHeight)
-					{
-						lineHeight = sizes[i].Height;
-					}
-				}
-				lineHeight++;
-				textSize.Height = lines.Length * lineHeight - 1;
+				base.Refresh();
 
-				// for auto-size, fit the control to the text
-				if (autoSize)
+				if (font != null && text != null && text.Length != 0)
 				{
-					frame.Size = textSize.ToSize();
-				}
-
-				// get the vertical offset
-				PointF offset = PointF.Empty;
-				switch (alignment & FN2DTextAlignment.Vertical)
-				{
-					case FN2DTextAlignment.Top:
-						break;
-					case FN2DTextAlignment.Middle:
-						offset.Y = (int)Math.Round((Height - textSize.Height) / 2);
-						break;
-					case FN2DTextAlignment.Bottom:
-						offset.Y = Height - textSize.Height;
-						break;
-				}
-
-				// get the horizontal offset
-				for (int i = 0; i < lines.Length; i++)
-				{
-					switch (alignment & FN2DTextAlignment.Horizontal)
+					// get the arrays
+					textSize = Size.Empty;
+					SizeF[] sizes = new SizeF[lines.Length];
+					float lineHeight = 0;
+					for (int i = 0; i < lines.Length; i++)
 					{
-						case FN2DTextAlignment.Left:
+						if (lines[i].Length != 0 && lines[i][lines[i].Length - 1] == '\r')
+						{
+							lines[i] = lines[i].Substring(0, lines[i].Length - 1);
+						}
+						sizes[i] = font.GetArrays(arrays[i], lines[i], Enabled ? textColor : disabledTextColor);
+						if (sizes[i].Width > textSize.Width)
+						{
+							textSize.Width = sizes[i].Width;
+						}
+						if (sizes[i].Height > lineHeight)
+						{
+							lineHeight = sizes[i].Height;
+						}
+					}
+					lineHeight++;
+					textSize.Height = lines.Length * lineHeight - 1;
+
+					// for auto-size, fit the control to the text
+					if (autoSize)
+					{
+						frame.Size = textSize.ToSize();
+					}
+
+					// get the vertical offset
+					PointF offset = PointF.Empty;
+					switch (alignment & FN2DTextAlignment.Vertical)
+					{
+						case FN2DTextAlignment.Top:
 							break;
-						case FN2DTextAlignment.Center:
-							offset.X = (int)Math.Round((Width - sizes[i].Width) / 2);
+						case FN2DTextAlignment.Middle:
+							offset.Y = (int)Math.Round((Height - textSize.Height) / 2);
 							break;
-						case FN2DTextAlignment.Right:
-							offset.X = Width - sizes[i].Width;
+						case FN2DTextAlignment.Bottom:
+							offset.Y = Height - textSize.Height;
 							break;
 					}
 
-					// adjust the vertices
-					arrays[i].OffsetVertices(offset);
-					offset.Y += lineHeight;
+					// get the horizontal offset
+					for (int i = 0; i < lines.Length; i++)
+					{
+						switch (alignment & FN2DTextAlignment.Horizontal)
+						{
+							case FN2DTextAlignment.Left:
+								break;
+							case FN2DTextAlignment.Center:
+								offset.X = (int)Math.Round((Width - sizes[i].Width) / 2);
+								break;
+							case FN2DTextAlignment.Right:
+								offset.X = Width - sizes[i].Width;
+								break;
+						}
+
+						// adjust the vertices
+						arrays[i].OffsetVertices(offset);
+						offset.Y += lineHeight;
+					}
 				}
 			}
 		}
@@ -279,9 +290,9 @@ namespace FrozenNorth.OpenGL.FN2D
 			if (font != null && font.Atlas != null && font.Atlas.TextureId != 0)
 			{
 				GL.BindTexture(TextureTarget.Texture2D, font.Atlas.TextureId);
-				foreach (FN2DArrays array in arrays)
+				foreach (FN2DArrays arr in arrays)
 				{
-					array.Draw();
+					arr.Draw();
 				}
 				GL.BindTexture(TextureTarget.Texture2D, 0);
 			}

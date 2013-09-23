@@ -52,6 +52,10 @@ namespace FrozenNorth.TestFN2D
 					btns = new FN2DButton[1];
 					btns[0] = CreateButton("OK", Color.LightGreen, Color.Green, HandleOKButtonTapped);
 					break;
+				case FN2DMessageButtons.Cancel:
+					btns = new FN2DButton[1];
+					btns[0] = CreateButton("Cancel", Color.Red, Color.DarkRed, HandleCancelButtonTapped);
+					break;
 				case FN2DMessageButtons.OKCancel:
 					btns = new FN2DButton[2];
 					btns[0] = CreateButton("OK", Color.LightGreen, Color.Green, HandleOKButtonTapped);
@@ -82,7 +86,14 @@ namespace FrozenNorth.TestFN2D
 		{
 		}
 
-		public void Initialize(string title, string message, FN2DButton[] buttons)
+		protected override void Dispose(bool disposing)
+		{
+			titleLabel = null;
+			messageLabel = null;
+			base.Dispose(disposing);
+		}
+
+		private void Initialize(string title, string message, FN2DButton[] buttons)
 		{
 			// check the parameters
 			if (string.IsNullOrEmpty(title)) title = FN2DCanvas.DefaultMessageTitle;
@@ -182,7 +193,8 @@ namespace FrozenNorth.TestFN2D
 	public enum FN2DMessageButtons
 	{
 		OK = 0,
-		OKCancel = 1,
+		Cancel = 1,
+		OKCancel = 2,
 		YesNo = 3,
 		YesNoCancel = 4,
 	}

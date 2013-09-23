@@ -42,11 +42,11 @@ namespace FrozenNorth.OpenGL.FN2D
 		protected Color topColor, bottomColor;
 		protected int cornerRadius = FN2DCanvas.DefaultCornerRadius;
 		protected int numCornerSteps = FN2DCanvas.DefaultCornerSteps;
-		protected FN2DArrays rectArrays = new FN2DArrays();
-		protected FN2DArrays topRightArrays = new FN2DArrays(BeginMode.TriangleFan);
-		protected FN2DArrays bottomRightArrays = new FN2DArrays(BeginMode.TriangleFan);
-		protected FN2DArrays bottomLeftArrays = new FN2DArrays(BeginMode.TriangleFan);
-		protected FN2DArrays topLeftArrays = new FN2DArrays(BeginMode.TriangleFan);
+		protected FN2DArrays rectArrays = FN2DArrays.Create();
+		protected FN2DArrays topRightArrays = FN2DArrays.Create(BeginMode.TriangleFan);
+		protected FN2DArrays bottomRightArrays = FN2DArrays.Create(BeginMode.TriangleFan);
+		protected FN2DArrays bottomLeftArrays = FN2DArrays.Create(BeginMode.TriangleFan);
+		protected FN2DArrays topLeftArrays = FN2DArrays.Create(BeginMode.TriangleFan);
 
 		/// <summary>
 		/// Constructor - Creates a gradient rectangle with a corner radius.

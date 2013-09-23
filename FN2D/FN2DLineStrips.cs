@@ -106,7 +106,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		{
 			if (Count == 0 || this[Count - 1].NumVertices != 0)
 			{
-				Add(new FN2DArrays(BeginMode.LineStrip));
+				Add(FN2DArrays.Create(BeginMode.LineStrip));
 			}
 		}
 
@@ -120,7 +120,7 @@ namespace FrozenNorth.OpenGL.FN2D
 			FN2DArrays lineStrip = LineStrip;
 			if (lineStrip == null)
 			{
-				lineStrip = new FN2DArrays(BeginMode.LineStrip);
+				lineStrip = FN2DArrays.Create(BeginMode.LineStrip);
 				Add(lineStrip);
 			}
 			lineStrip.AddVertex(x, y);
@@ -158,7 +158,7 @@ namespace FrozenNorth.OpenGL.FN2D
 			FN2DArrays lineStrip = LineStrip;
 			if (lineStrip == null || (lineStrip.NumVertices != 0 && (lastPoint.X != x1 || lastPoint.Y != y1)))
 			{
-				lineStrip = new FN2DArrays(BeginMode.LineStrip);
+				lineStrip = FN2DArrays.Create(BeginMode.LineStrip);
 				lineStrip.AddVertex(x1, y1);
 				Add(lineStrip);
 			}
