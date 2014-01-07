@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* Copyright (C) 2013 Frozen North Computing
+* Copyright (C) 2013-2014 Frozen North Computing
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,8 @@ using FN2DBitmap = System.Drawing.Bitmap;
 #elif FN2D_IOS
 using MonoTouch.UIKit;
 using FN2DBitmap = MonoTouch.UIKit.UIImage;
+#elif FN2D_AND
+using FN2DBitmap = Android.Graphics.Bitmap;
 #endif
 
 namespace FrozenNorth.OpenGL.FN2D
@@ -51,7 +53,11 @@ namespace FrozenNorth.OpenGL.FN2D
 		/// <param name="disabledSelectedImage">Image used when the button is disabled and selected.</param>
 		public FN2DImageButton(FN2DCanvas canvas, FN2DBitmap normalImage, FN2DBitmap pressedImage, FN2DBitmap disabledImage,
 								FN2DBitmap selectedImage, FN2DBitmap disabledSelectedImage)
+#if FN2D_AND
+			: base(canvas, new Rectangle(0, 0, normalImage.Width, normalImage.Height))
+#else
 			: base(canvas, new Rectangle(0, 0, (int)normalImage.Size.Width, (int)normalImage.Size.Height))
+#endif
 		{
 			// disable refreshing
 			RefreshEnabled = false;
@@ -85,7 +91,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		}
 
 		/// <summary>
-		/// Frees unmanaged resources.
+		/// Frees unmanaged resources and calls Dispose() on the member objects.
 		/// </summary>
 		protected override void Dispose(bool disposing)
 		{
@@ -171,7 +177,11 @@ namespace FrozenNorth.OpenGL.FN2D
 			set
 			{
 				normalImage = value;
+#if FN2D_AND
+				Size = new Size(normalImage.Width, normalImage.Height);
+#else
 				Size = new Size((int)normalImage.Size.Width, (int)normalImage.Size.Height);
+#endif
 				Refresh();
 			}
 		}

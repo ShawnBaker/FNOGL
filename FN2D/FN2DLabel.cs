@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* Copyright (C) 2013 Frozen North Computing
+* Copyright (C) 2013-2014 Frozen North Computing
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,7 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 #if FN2D_WIN
 using OpenTK.Graphics.OpenGL;
-#elif FN2D_IOS
+#elif FN2D_IOS || FN2D_AND
 using OpenTK.Graphics.ES11;
 using TextureTarget = OpenTK.Graphics.ES11.All;
 #endif
@@ -47,7 +47,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		protected FN2DArraysList arrays = new FN2DArraysList();
 		protected SizeF textSize;
 		protected bool autoSize = false;
-		protected FN2DTextAlignment alignment = FN2DTextAlignment.Center | FN2DTextAlignment.Middle;
+		protected FN2DTextAlignment alignment = FN2DTextAlignment.MiddleCenter;
 
 		/// <summary>
 		/// Constructor - Creates a label on a canvas.
@@ -63,10 +63,13 @@ namespace FrozenNorth.OpenGL.FN2D
 				font.Atlas.AtlasResized += HandleFontAtlasResized;
 			}
 			Text = text;
+
+			// disable touch events
+			TouchEnabled = false;
 		}
 
 		/// <summary>
-		/// Frees unmanaged resources.
+		/// Frees unmanaged resources and calls Dispose() on the member objects.
 		/// </summary>
 		protected override void Dispose(bool disposing)
 		{

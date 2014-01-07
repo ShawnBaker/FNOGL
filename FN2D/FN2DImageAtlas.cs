@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* Copyright (C) 2013 Frozen North Computing
+* Copyright (C) 2013-2014 Frozen North Computing
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -28,14 +28,16 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 #if FN2D_WIN
 using OpenTK.Graphics.OpenGL;
-#elif FN2D_IOS
+#elif FN2D_IOS || FN2D_AND
 using OpenTK.Graphics.ES11;
 using GetPName = OpenTK.Graphics.ES11.All;
 using PixelInternalFormat = OpenTK.Graphics.ES11.All;
 using PixelType = OpenTK.Graphics.ES11.All;
 using TextureParameterName = OpenTK.Graphics.ES11.All;
 using TextureTarget = OpenTK.Graphics.ES11.All;
+#if FN2D_IOS
 using MonoTouch.CoreVideo;
+#endif
 #endif
 
 namespace FrozenNorth.OpenGL.FN2D
@@ -92,7 +94,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		}
 
 		/// <summary>
-		/// Frees unmanaged resources.
+		/// Frees unmanaged resources and calls Dispose() on the member objects.
 		/// </summary>
 		protected override void Dispose(bool disposing)
 		{
@@ -144,6 +146,8 @@ namespace FrozenNorth.OpenGL.FN2D
 			pixelFormat = (depth == 4) ? PixelFormat.Rgba : ((depth == 3) ? PixelFormat.Rgb : PixelFormat.Alpha);
 #if FN2D_WIN
 			GL.TexImage2D(TextureTarget.Texture2D, 0, internalFormat, Size.Width, Size.Height, 0, pixelFormat, PixelType.UnsignedByte, IntPtr.Zero);
+#elif FN2D_AND
+			GL.TexImage2D(TextureTarget.Texture2D, 0, (int)internalFormat, Size.Width, Size.Height, 0, (All)pixelFormat, PixelType.UnsignedByte, IntPtr.Zero);
 #elif FN2D_IOS
 			GL.TexImage2D(All.Texture2D, 0, (int)internalFormat, Size.Width, Size.Height, 0, (All)pixelFormat, All.UnsignedByte, IntPtr.Zero);
 			if (frameBuffer != 0)
@@ -193,7 +197,7 @@ namespace FrozenNorth.OpenGL.FN2D
 			{
 #if FN2D_WIN
 				GL.TexSubImage2D(TextureTarget.Texture2D, 0, region.X, region.Y + i, region.Width, 1, pixelFormat, PixelType.UnsignedByte, rowData);
-#elif FN2D_IOS
+#elif FN2D_IOS || FN2D_AND
 				GL.TexSubImage2D(All.Texture2D, 0, region.X, region.Y + i, region.Width, 1, (All)pixelFormat, PixelType.UnsignedByte, rowData);
 #endif
 				rowData = (IntPtr)(rowData.ToInt32() + stride);
@@ -293,7 +297,7 @@ namespace FrozenNorth.OpenGL.FN2D
 					}
 					GL.Oes.BindFramebuffer(All.FramebufferOes, oldFrameBuffer);
 					//GL.Viewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-#else
+#elif FN2D_WIN
 					GL.BindTexture(TextureTarget.Texture2D, textureId);
 					GL.GetTexImage(TextureTarget.Texture2D, 0, pixelFormat, PixelType.UnsignedByte, dataPtr);
 #endif

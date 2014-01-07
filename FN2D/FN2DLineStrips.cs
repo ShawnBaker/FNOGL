@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* Copyright (C) 2013 Frozen North Computing
+* Copyright (C) 2013-2014 Frozen North Computing
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,7 @@ using System.Drawing;
 using System.Collections.Generic;
 #if FN2D_WIN
 using OpenTK.Graphics.OpenGL;
-#elif FN2D_IOS
+#elif FN2D_IOS || FN2D_AND
 using OpenTK.Graphics.ES11;
 using BeginMode = OpenTK.Graphics.ES11.All;
 #endif

@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* Copyright (C) 2013 Frozen North Computing
+* Copyright (C) 2013-2014 Frozen North Computing
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -32,20 +32,25 @@ using OpenTK.Graphics.OpenGL;
 using DrawMode = OpenTK.Graphics.OpenGL.BeginMode;
 using FN2DBitmap = System.Drawing.Bitmap;
 using TextureParamName = OpenTK.Graphics.OpenGL.TextureParameterName;
-#elif FN2D_IOS
+#else
+#if FN2D_IOS
 using MonoTouch.CoreAnimation;
 using MonoTouch.CoreGraphics;
 using MonoTouch.Foundation;
 using MonoTouch.ObjCRuntime;
 using MonoTouch.OpenGLES;
 using MonoTouch.UIKit;
+using FN2DBitmap = MonoTouch.UIKit.UIImage;
+#elif FN2D_AND
+using OpenTK.Platform.Android;
+using FN2DBitmap = Android.Graphics.Bitmap;
+#endif
 using OpenTK.Graphics;
 using OpenTK.Graphics.ES11;
 using ArrayCap = OpenTK.Graphics.ES11.All;
 using BeginMode = OpenTK.Graphics.ES11.All;
 using DrawElementsType = OpenTK.Graphics.ES11.All;
 using EnableCap = OpenTK.Graphics.ES11.All;
-using FN2DBitmap = MonoTouch.UIKit.UIImage;
 using PixelType = OpenTK.Graphics.ES11.All;
 using StringName = OpenTK.Graphics.ES11.All;
 using TexCoordPointerType = OpenTK.Graphics.ES11.All;
@@ -65,8 +70,12 @@ namespace FrozenNorth.OpenGL.FN2D
 		protected static DrawElementsType UnsignedIntElement = DrawElementsType.UnsignedInt;
 		protected static OpenTK.Graphics.OpenGL.PixelFormat BitmapPixelFormat = OpenTK.Graphics.OpenGL.PixelFormat.Bgra;
 		protected static PixelInternalFormat TexturePixelFormat = PixelInternalFormat.Rgba;
-#elif FN2D_IOS
+#elif FN2D_IOS || FN2D_AND
+#if FN2D_IOS
 		protected static All UnsignedIntElement = All.UnsignedIntOes;
+#elif FN2D_AND
+		protected static All UnsignedIntElement = All.UnsignedInt;
+#endif
 		protected static All BitmapPixelFormat = All.Rgba;
 		protected static int TexturePixelFormat = (int)All.Rgba;
 #endif
@@ -93,6 +102,8 @@ namespace FrozenNorth.OpenGL.FN2D
 		public FN2DImage(FN2DCanvas canvas)
 			: base(canvas)
 		{
+			// disable touch events
+			TouchEnabled = false;
 		}
 
 		/// <summary>
@@ -104,7 +115,11 @@ namespace FrozenNorth.OpenGL.FN2D
 		public FN2DImage(FN2DCanvas canvas, FN2DBitmap image, bool resizable = false)
 			: this(canvas)
 		{
+#if FN2D_AND
+			imageSize = new Size(image.Width, image.Height);
+#else
 			imageSize = new Size((int)image.Size.Width, (int)image.Size.Height);
+#endif
 			if (resizable)
 			{
 				insets = new FN2DRectangleInsets(imageSize);
@@ -114,7 +129,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		}
 
 		/// <summary>
-		/// Frees unmanaged resources.
+		/// Frees unmanaged resources and calls Dispose() on the member objects.
 		/// </summary>
 		protected override void Dispose(bool disposing)
 		{
@@ -191,7 +206,11 @@ namespace FrozenNorth.OpenGL.FN2D
 					BitmapData imageData = null;
 #endif
 					IntPtr rgbBuffer = IntPtr.Zero;
+#if FN2D_AND
+					imageSize = new Size(image.Width, image.Height);
+#else
 					imageSize = new Size((int)image.Size.Width, (int)image.Size.Height);
+#endif
 					if (!insets.IsFull)
 					{
 						frame.Size = imageSize;
@@ -211,6 +230,8 @@ namespace FrozenNorth.OpenGL.FN2D
 						                                                    image.CGImage.ColorSpace, CGBitmapFlags.PremultipliedLast);
 						bitmapContext.DrawImage(new RectangleF(0, 0, imageSize.Width, imageSize.Height), image.CGImage);
 						bitmapContext.Dispose();
+#elif FN2D_AND
+						rgbBuffer = image.LockPixels();
 #endif
 						// get the middle color
 						if (insets.IsFull && (imageSize.Width - insets.Width) == 1 && (imageSize.Height - insets.Height) == 1)
@@ -219,7 +240,7 @@ namespace FrozenNorth.OpenGL.FN2D
 #if FN2D_WIN
 							middleColor = Color.FromArgb(Marshal.ReadByte(rgbBuffer, offset + 3), Marshal.ReadByte(rgbBuffer, offset + 2),
 							                             Marshal.ReadByte(rgbBuffer, offset + 1), Marshal.ReadByte(rgbBuffer, offset + 0));
-#elif FN2D_IOS
+#elif FN2D_IOS || FN2D_AND
 							middleColor = Color.FromArgb(Marshal.ReadByte(rgbBuffer, offset + 3), Marshal.ReadByte(rgbBuffer, offset + 0),
 							                             Marshal.ReadByte(rgbBuffer, offset + 1), Marshal.ReadByte(rgbBuffer, offset + 2));
 #endif
@@ -241,16 +262,24 @@ namespace FrozenNorth.OpenGL.FN2D
 							              BitmapPixelFormat, PixelType.UnsignedByte, IntPtr.Zero);
 							if (rgbBuffer != IntPtr.Zero)
 							{
+#if FN2D_AND
+								Android.Opengl.GLUtils.TexSubImage2D((int)All.Texture2D, 0, 0, 0, image);
+#else
 								GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, imageSize.Width, imageSize.Height, BitmapPixelFormat,
 								                 PixelType.UnsignedByte, rgbBuffer);
+#endif
 							}
 						}
 						else
 						{
 							textureSize = imageSize;
 							drawingSize = new SizeF(1, 1);
+#if FN2D_AND
+							Android.Opengl.GLUtils.TexImage2D((int)All.Texture2D, 0, image, 0);
+#else
 							GL.TexImage2D(TextureTarget.Texture2D, 0, TexturePixelFormat, imageSize.Width, imageSize.Height, 0,
 							              BitmapPixelFormat, PixelType.UnsignedByte, rgbBuffer);
+#endif
 						}
 						GL.BindTexture(TextureTarget.Texture2D, 0);
 					}
@@ -269,6 +298,12 @@ namespace FrozenNorth.OpenGL.FN2D
 						if (rgbBuffer != IntPtr.Zero)
 						{
 							Marshal.FreeHGlobal(rgbBuffer);
+							rgbBuffer = IntPtr.Zero;
+						}
+#elif FN2D_AND
+						if (rgbBuffer != IntPtr.Zero)
+						{
+							image.UnlockPixels();
 							rgbBuffer = IntPtr.Zero;
 						}
 #endif
