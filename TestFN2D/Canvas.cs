@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* Copyright (C) 2013 Frozen North Computing
+* Copyright (C) 2013-2014 Frozen North Computing
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -27,13 +27,21 @@ using System.IO;
 using System.Reflection;
 #if IOS
 using MonoTouch.UIKit;
+using FN2DBitmap = MonoTouch.UIKit.UIImage;
+#elif ANDROID
+using Android.Content;
+using FN2DBitmap = Android.Graphics.Bitmap;
+#else
+using FN2DBitmap = System.Drawing.Bitmap;
 #endif
 using FrozenNorth.OpenGL.FN2D;
 
 namespace FrozenNorth.TestFN2D
 {
-	public class Canvas : FN2DCanvas
+	public abstract class CanvasCommon : FN2DCanvas
 	{
+#if ANDROID
+#endif
 		protected FN2DDrawingImage image;
 		protected FN2DFont font;
 		protected FN2DImage rotating;
@@ -43,9 +51,23 @@ namespace FrozenNorth.TestFN2D
 		protected FN2DMessage message;
 		protected int ticks = 0;
 
-		public Canvas(Size size, string fontPath = null)
+#if ANDROID
+		public CanvasCommon(Context context, Size size, string fontPath = null)
+			: base(context, size, fontPath)
+		{
+		}
+#else
+		public CanvasCommon(Size size, string fontPath = null)
 			: base(size, fontPath)
 		{
+		}
+#endif
+
+		public override void OnInitialized()
+		{
+			// call the base method
+			base.OnInitialized();
+
 			// set the background
 			BackgroundColor = Color.FromArgb(0, 100, 50);
 
@@ -111,6 +133,9 @@ namespace FrozenNorth.TestFN2D
 			StartDrawTimer();
 		}
 
+		/// <summary>
+		/// Frees unmanaged resources and calls Dispose() on the member objects.
+		/// </summary>
 		protected override void Dispose(bool disposing)
 		{
 			if (disposing)
@@ -169,7 +194,6 @@ namespace FrozenNorth.TestFN2D
 					}
 				}
 			}
-
 			base.Draw(force);
 		}
 
@@ -224,26 +248,6 @@ namespace FrozenNorth.TestFN2D
 			return button;
 		}
 
-#if WINDOWS
-		private Bitmap GetImage(string fileName)
-		{
-			if (!Path.HasExtension(fileName))
-			{
-				fileName = Path.ChangeExtension(fileName, "png");
-			}
-			Assembly assembly = Assembly.GetExecutingAssembly();
-			Stream stream = assembly.GetManifestResourceStream("FrozenNorth.TestFN2D.Images." + fileName);
-			return (Bitmap)Bitmap.FromStream(stream);
-		}
-#elif IOS
-		private UIImage GetImage(string fileName)
-		{
-			if (!Path.HasExtension(fileName))
-			{
-				fileName = Path.ChangeExtension(fileName, "png");
-			}
-			return UIImage.FromBundle("Images/" + fileName);
-		}
-#endif
+		public abstract FN2DBitmap GetImage(string fileName);
 	}
 }
