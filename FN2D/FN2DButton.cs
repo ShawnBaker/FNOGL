@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* Copyright (C) 2013 Frozen North Computing
+* Copyright (C) 2013-2014 Frozen North Computing
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,8 @@ using FN2DBitmap = System.Drawing.Bitmap;
 #elif FN2D_IOS
 using MonoTouch.UIKit;
 using FN2DBitmap = MonoTouch.UIKit.UIImage;
+#elif FN2D_AND
+using FN2DBitmap = Android.Graphics.Bitmap;
 #endif
 
 namespace FrozenNorth.OpenGL.FN2D
@@ -144,7 +146,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		}
 
 		/// <summary>
-		/// Frees unmanaged resources.
+		/// Frees unmanaged resources and calls Dispose() on the member objects.
 		/// </summary>
 		protected override void Dispose(bool disposing)
 		{
@@ -288,6 +290,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		public override void TouchUp(FN2DTouchEventArgs e)
 		{
 			base.TouchUp(e);
+			Touching = false;
 			Refresh();
 		}
 		
@@ -298,6 +301,19 @@ namespace FrozenNorth.OpenGL.FN2D
 		{
 			base.TouchCancel(e);
 			Refresh();
+		}
+
+		/// <summary>
+		/// Gets or sets the background color.
+		/// </summary>
+		public override Color BackgroundColor
+		{
+			get { return base.BackgroundColor; }
+			set
+			{
+				TopColor = value;
+				BottomColor = value;
+			}
 		}
 
 		/// <summary>
