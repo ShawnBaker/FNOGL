@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* Copyright (C) 2013 Frozen North Computing
+* Copyright (C) 2013-2014 Frozen North Computing
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,9 @@ using FN2DBitmap = System.Drawing.Bitmap;
 #elif FN2D_IOS
 using OpenTK.Graphics.ES11;
 using FN2DBitmap = MonoTouch.UIKit.UIImage;
+#elif FN2D_AND
+using OpenTK.Graphics.ES11;
+using FN2DBitmap = Android.Graphics.Bitmap;
 #endif
 
 namespace FrozenNorth.OpenGL.FN2D
@@ -47,7 +50,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		/// <param name="canvas">Canvas that the image will be on.</param>
 		/// <param name="lineColor">Line color.</param>
 		/// <param name="lineWidth">Line width.</param>
-		/// <param name="image">Background image.</param>
+		/// <param name="image">Image to be displayed.</param>
 		public FN2DDrawingImage(FN2DCanvas canvas, Color lineColor, int lineWidth = 1, FN2DBitmap image = null)
 			: base(canvas, image)
 		{
@@ -59,8 +62,14 @@ namespace FrozenNorth.OpenGL.FN2D
 			linesStripsList = new FN2DLineStripsList();
 			lineStrips = new FN2DLineStrips(lineColor, lineWidth);
 			linesStripsList.Add(lineStrips);
+
+			// enable touch events
+			TouchEnabled = true;
 		}
 
+		/// <summary>
+		/// Frees unmanaged resources and calls Dispose() on the member objects.
+		/// </summary>
 		protected override void Dispose(bool disposing)
 		{
 			if (disposing)
@@ -101,18 +110,15 @@ namespace FrozenNorth.OpenGL.FN2D
 		public override void TouchDown(FN2DTouchEventArgs e)
 		{
 			base.TouchDown(e);
-			if (e.Buttons == FN2DTouchButtons.Left)
-			{
-				Touching = true;
-				lineStrips.Add();
-				lineStrips.Add(GetZoomedLocation(e.Location));
-			}
+			Touching = true;
+			lineStrips.Add();
+			lineStrips.Add(GetZoomedLocation(e.Location));
 		}
 
 		public override void TouchMove(FN2DTouchEventArgs e)
 		{
 			base.TouchMove(e);
-			if (Touching && e.Buttons == FN2DTouchButtons.Left)
+			if (Touching)
 			{
 				lineStrips.Add(GetZoomedLocation(e.Location));
 				canvas.IsDirty = true;
@@ -122,7 +128,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		public override void TouchUp(FN2DTouchEventArgs e)
 		{
 			base.TouchUp(e);
-			if (e.Buttons == FN2DTouchButtons.Left)
+			if (Touching)
 			{
 				lineStrips.Add(GetZoomedLocation(e.Location));
 				canvas.IsDirty = true;
@@ -131,11 +137,11 @@ namespace FrozenNorth.OpenGL.FN2D
 
 		public override void TouchCancel(FN2DTouchEventArgs e)
 		{
+			base.TouchCancel(e);
 			if (Touching)
 			{
 				lineStrips.Remove(lineStrips.LineStrip);
 			}
-			base.TouchCancel(e);
 		}
 	}
 }
