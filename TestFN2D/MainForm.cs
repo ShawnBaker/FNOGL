@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* Copyright (C) 2013 Frozen North Computing
+* Copyright (C) 2013-2014 Frozen North Computing
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,7 @@ namespace FrozenNorth.TestFN2D
 {
 	public class MainForm : Form
 	{
-		private Canvas_WIN canvas;
+		private Canvas canvas;
 
 		public MainForm()
 		{
@@ -40,7 +40,7 @@ namespace FrozenNorth.TestFN2D
 			Text = "Test FN2D";
 
 			// create the FN2D canvas
-			canvas = new Canvas_WIN(ClientRectangle.Size, GetFontPath());
+			canvas = new Canvas(ClientRectangle.Size, GetFontPath());
 			Controls.Add(canvas);
 		}
 
@@ -83,7 +83,7 @@ namespace FrozenNorth.TestFN2D
 			}
 
 			// add the Fonts directory
-			return Path.Combine(path, "Fonts");
+			return Path.Combine(path, Path.Combine("Assets", "Fonts"));
 		}
 	}
 }

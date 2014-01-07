@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* Copyright (C) 2013 Frozen North Computing
+* Copyright (C) 2013-2014 Frozen North Computing
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -42,7 +42,7 @@ namespace FrozenNorth.TestFN2D
 			base.ViewDidAppear(animated);
 			
 			// create the canvas
-			canvas = new Canvas_IOS(View.Bounds.Size.ToSize());
+			canvas = new Canvas(View.Bounds.Size.ToSize());
 			canvas.AutoresizingMask = UIViewAutoresizing.All;
 			View.Add(canvas);
 		}
