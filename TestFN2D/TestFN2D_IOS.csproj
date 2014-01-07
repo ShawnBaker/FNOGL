@@ -22,7 +22,8 @@
     <ConsolePause>false</ConsolePause>
     <MtouchLink>None</MtouchLink>
     <MtouchDebug>true</MtouchDebug>
-    <MtouchI18n />
+    <MtouchI18n>
+    </MtouchI18n>
     <MtouchArch>ARMv7</MtouchArch>
     <AssemblyName>TestOpenGL</AssemblyName>
   </PropertyGroup>
@@ -33,7 +34,8 @@
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
     <MtouchLink>None</MtouchLink>
-    <MtouchI18n />
+    <MtouchI18n>
+    </MtouchI18n>
     <MtouchArch>ARMv7</MtouchArch>
     <DefineConstants>IOS</DefineConstants>
     <AssemblyName>TestOpenGL</AssemblyName>
@@ -49,11 +51,13 @@
     <ConsolePause>false</ConsolePause>
     <MtouchDebug>true</MtouchDebug>
     <CodesignKey>iPhone Developer</CodesignKey>
-    <MtouchI18n />
+    <MtouchI18n>
+    </MtouchI18n>
     <MtouchArch>ARMv7</MtouchArch>
-    <IpaPackageName />
+    <IpaPackageName>
+    </IpaPackageName>
     <AssemblyName>TestFN2D</AssemblyName>
-    <MtouchExtraArgs>--compiler:clang --registrar:static -gcc_flags "-L${ProjectDir}/../ThirdParty -lfreetype -force_load ${ProjectDir}/../ThirdParty/libfreetype.a"</MtouchExtraArgs>
+    <MtouchExtraArgs>--compiler:clang --registrar:static -gcc_flags "-L${ProjectDir}/../ThirdParty/ios -lfreetype -force_load ${ProjectDir}/../ThirdParty/ios/libfreetype.a"</MtouchExtraArgs>
     <MtouchLink>None</MtouchLink>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhone' ">
@@ -63,7 +67,8 @@
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
     <CodesignKey>iPhone Developer</CodesignKey>
-    <MtouchI18n />
+    <MtouchI18n>
+    </MtouchI18n>
     <MtouchArch>ARMv7</MtouchArch>
     <DefineConstants>IOS</DefineConstants>
     <AssemblyName>TestFN2D</AssemblyName>
@@ -80,7 +85,8 @@
     <CodesignKey>iPhone Distribution</CodesignKey>
     <CodesignProvision>Automatic:AdHoc</CodesignProvision>
     <AssemblyName>TestFN2D</AssemblyName>
-    <MtouchI18n />
+    <MtouchI18n>
+    </MtouchI18n>
     <MtouchArch>ARMv7</MtouchArch>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'AppStore|iPhone' ">
@@ -93,7 +99,8 @@
     <ConsolePause>false</ConsolePause>
     <CodesignProvision>Automatic:AppStore</CodesignProvision>
     <AssemblyName>TestFN2D</AssemblyName>
-    <MtouchI18n />
+    <MtouchI18n>
+    </MtouchI18n>
     <MtouchArch>ARMv7</MtouchArch>
   </PropertyGroup>
   <ItemGroup>
@@ -104,11 +111,8 @@
     <Reference Include="OpenTK-1.0" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Images\" />
-    <Folder Include="Fonts\" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Info.plist" />
+    <None Include="Assets\Fonts\COPYRIGHT.TXT" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Main.cs" />
@@ -119,28 +123,31 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <BundleResource Include="Images\button_blue_pressed.png" />
-    <BundleResource Include="Images\button_blue.png" />
-    <BundleResource Include="Images\button_disabled.png" />
-    <BundleResource Include="Images\button_green_pressed.png" />
-    <BundleResource Include="Images\button_green.png" />
-    <BundleResource Include="Images\button_red_pressed.png" />
-    <BundleResource Include="Images\button_red.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Fonts\Vera.ttf" />
-    <Content Include="Fonts\VeraBd.ttf" />
-    <Content Include="Images\SkaraBrae.jpg" />
-    <Content Include="Images\OldPenny.png" />
-    <Content Include="Images\PurpleSquares.png" />
-    <Content Include="Images\PurpleSquaresDisabled.png" />
-    <Content Include="Images\YellowCircles.png" />
-    <Content Include="Images\YellowCirclesDisabled.png" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\FN2D\FN2D_IOS.csproj">
       <Project>{B57C5009-1F32-49C7-8D18-9F829671AD5C}</Project>
       <Name>FN2D_IOS</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Assets\" />
+  </ItemGroup>
+  <ItemGroup>
+    <BundleResource Include="Assets\Images\OldPenny.png" />
+    <BundleResource Include="Assets\Images\PurpleSquares.png" />
+    <BundleResource Include="Assets\Images\PurpleSquaresDisabled.png" />
+    <BundleResource Include="Assets\Images\SkaraBrae.jpg" />
+    <BundleResource Include="Assets\Images\YellowCircles.png" />
+    <BundleResource Include="Assets\Images\YellowCirclesDisabled.png" />
+    <BundleResource Include="Assets\Images\button_blue.png" />
+    <BundleResource Include="Assets\Images\button_blue_pressed.png" />
+    <BundleResource Include="Assets\Images\button_disabled.png" />
+    <BundleResource Include="Assets\Images\button_green.png" />
+    <BundleResource Include="Assets\Images\button_green_pressed.png" />
+    <BundleResource Include="Assets\Images\button_red.png" />
+    <BundleResource Include="Assets\Images\button_red_pressed.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assets\Fonts\Vera.ttf" />
+    <Content Include="Assets\Fonts\VeraBd.ttf" />
   </ItemGroup>
 </Project>
