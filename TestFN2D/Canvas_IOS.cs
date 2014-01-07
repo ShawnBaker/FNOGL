@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* Copyright (C) 2013 Frozen North Computing
+* Copyright (C) 2013-2014 Frozen North Computing
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -22,13 +22,14 @@
 *
 *******************************************************************************/
 using System;
+using System.IO;
 using System.Drawing;
 using MonoTouch.UIKit;
 using FrozenNorth.OpenGL.FN2D;
 
 namespace FrozenNorth.TestFN2D
 {
-	public class Canvas_IOS : Canvas
+	public class Canvas : CanvasCommon
 	{
 		private FN2DPinchGestureRecognizer pinchGestureRecognizer;
 		private UIPanGestureRecognizer panGestureRecognizer;
@@ -36,7 +37,7 @@ namespace FrozenNorth.TestFN2D
 		private PointF panLocation;
 		private Size panStart;
 
-		public Canvas_IOS(Size size, string fontPath = null)
+		public Canvas(Size size, string fontPath = null)
 			: base(size, fontPath)
 		{
 			// create the recognizers
@@ -105,6 +106,15 @@ namespace FrozenNorth.TestFN2D
 					image.Pan = new Size(panStart.Width + offset.X, panStart.Height + offset.Y);
 				}
 			}
+		}
+
+		public override UIImage GetImage(string fileName)
+		{
+			if (!Path.HasExtension(fileName))
+			{
+				fileName = Path.ChangeExtension(fileName, "png");
+			}
+			return UIImage.FromBundle(Path.Combine("Assets", "Images", fileName));
 		}
 	}
 }
