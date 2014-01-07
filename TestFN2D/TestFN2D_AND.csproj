@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>10.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{6D2A5B7C-959A-445F-8922-090893A5CE5C}</ProjectGuid>
+    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <RootNamespace>TestFN2D</RootNamespace>
+    <AndroidApplication>True</AndroidApplication>
+    <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
+    <AndroidResgenClass>Resource</AndroidResgenClass>
+    <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
+    <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
+    <AssemblyName>TestFN2D</AssemblyName>
+    <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;ANDROID</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AndroidLinkMode>None</AndroidLinkMode>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
+    <ConsolePause>false</ConsolePause>
+    <DefineConstants>ANDROID</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="Mono.Android" />
+    <Reference Include="OpenTK-1.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="MainActivity.cs" />
+    <Compile Include="Resources\Resource.designer.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Canvas.cs" />
+    <Compile Include="Canvas_AND.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Properties\AndroidManifest.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\layout\Main.axml" />
+    <AndroidResource Include="Resources\values\Strings.xml" />
+    <AndroidResource Include="Resources\drawable\Icon.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\FN2D\FN2D_AND.csproj">
+      <Project>{7E00B322-74B0-4B29-81B9-D00BDEED9997}</Project>
+      <Name>FN2D_AND</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Assets\Images\" />
+    <Folder Include="Assets\Fonts\" />
+    <Folder Include="lib\" />
+    <Folder Include="lib\android\" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidAsset Include="Assets\Images\button_blue_pressed.png" />
+    <AndroidAsset Include="Assets\Images\button_blue.png" />
+    <AndroidAsset Include="Assets\Images\button_disabled.png" />
+    <AndroidAsset Include="Assets\Images\button_green_pressed.png" />
+    <AndroidAsset Include="Assets\Images\button_green.png" />
+    <AndroidAsset Include="Assets\Images\button_red_pressed.png" />
+    <AndroidAsset Include="Assets\Images\button_red.png" />
+    <AndroidAsset Include="Assets\Images\OldPenny.png" />
+    <AndroidAsset Include="Assets\Images\PurpleSquares.png" />
+    <AndroidAsset Include="Assets\Images\PurpleSquaresDisabled.png" />
+    <AndroidAsset Include="Assets\Images\SkaraBrae.jpg" />
+    <AndroidAsset Include="Assets\Images\YellowCircles.png" />
+    <AndroidAsset Include="Assets\Images\YellowCirclesDisabled.png" />
+    <AndroidAsset Include="Assets\Fonts\Vera.ttf" />
+    <AndroidAsset Include="Assets\Fonts\VeraBd.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidNativeLibrary Include="..\ThirdParty\android\x86\libfreetype.so">
+      <Link>lib\android\x86\libfreetype.so</Link>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="..\ThirdParty\android\armeabi-v7a\libfreetype.so">
+      <Link>lib\android\armeabi-v7a\libfreetype.so</Link>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="..\ThirdParty\android\armeabi\libfreetype.so">
+      <Link>lib\android\armeabi\libfreetype.so</Link>
+    </AndroidNativeLibrary>
+  </ItemGroup>
+</Project>
