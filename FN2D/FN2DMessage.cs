@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* Copyright (C) 2013 Frozen North Computing
+* Copyright (C) 2013-2014 Frozen North Computing
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -23,16 +23,15 @@
 *******************************************************************************/
 using System;
 using System.Drawing;
-using FrozenNorth.OpenGL.FN2D;
 
-namespace FrozenNorth.TestFN2D
+namespace FrozenNorth.OpenGL.FN2D
 {
 	public class FN2DMessage : FN2DControl
 	{
-		private static int MARGIN = 20;
-		private static int PADDING = 20;
-		private static int TITLE_MARGIN = 4;
-		private static int TITLE_HEIGHT = 30;
+		private const int MARGIN = 20;
+		private const int PADDING = 20;
+		private const int TITLE_MARGIN = 4;
+		private const int TITLE_HEIGHT = 30;
 
 		private FN2DLabel titleLabel, messageLabel;
 
@@ -86,6 +85,9 @@ namespace FrozenNorth.TestFN2D
 		{
 		}
 
+		/// <summary>
+		/// Frees unmanaged resources and calls Dispose() on the member objects.
+		/// </summary>
 		protected override void Dispose(bool disposing)
 		{
 			titleLabel = null;
