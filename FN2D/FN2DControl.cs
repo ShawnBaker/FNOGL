@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* Copyright (C) 2013 Frozen North Computing
+* Copyright (C) 2013-2014 Frozen North Computing
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -30,8 +30,12 @@ using FN2DBitmap = System.Drawing.Bitmap;
 #elif FN2D_IOS
 using MonoTouch.UIKit;
 using OpenTK.Graphics.ES11;
-using MatrixMode = OpenTK.Graphics.ES11.All;
 using FN2DBitmap = MonoTouch.UIKit.UIImage;
+using MatrixMode = OpenTK.Graphics.ES11.All;
+#elif FN2D_AND
+using OpenTK.Graphics.ES11;
+using FN2DBitmap = Android.Graphics.Bitmap;
+using MatrixMode = OpenTK.Graphics.ES11.All;
 #endif
 
 namespace FrozenNorth.OpenGL.FN2D
@@ -48,10 +52,9 @@ namespace FrozenNorth.OpenGL.FN2D
 		protected FN2DCanvas canvas;
 		protected FN2DControl parent = null;
 		protected Rectangle frame;
-		protected FN2DControlList controls = new FN2DControlList();
+		private FN2DControlList controls;
 		protected FN2DRectangle background = new FN2DRectangle();
 		protected FN2DImage backgroundImage = null;
-		protected FN2DMirroring mirroring = FN2DMirroring.None;
 		protected float zoom = 1;
 		protected float minZoom = 0.1f;
 		protected float maxZoom = 10;
@@ -78,6 +81,7 @@ namespace FrozenNorth.OpenGL.FN2D
 			{
 				throw new ArgumentNullException("FN2DControl: The canvas cannot be null.");
 			}
+			controls = new FN2DControlList(this);
 			this.canvas = canvas;
 			background.CornerRadius = cornerRadius;
 			background.TopColor = topColor;
@@ -206,17 +210,6 @@ namespace FrozenNorth.OpenGL.FN2D
 			PointF panTL = new PointF(zoomTL.X - pan.Width, zoomTL.Y - pan.Height);
 			PointF panBR = new PointF(zoomBR.X - pan.Width, zoomBR.Y - pan.Height);
 
-			if ((Mirroring & FN2DMirroring.LeftRight) == FN2DMirroring.LeftRight)
-			{
-			}
-			if ((Mirroring & FN2DMirroring.UpDown) == FN2DMirroring.UpDown)
-			{
-			}
-			if (bounds.Width == 1024)
-			{
-				//Console.WriteLine("DrawBegin: " + bounds + " * " + zoom + "(" + zoomOffset + ") = " + zoomTL + "," + zoomBR + " + " + pan + " = " + panTL + "," + panBR);
-			}
-
 			// set the orthographic projection for the control
 			GL.Ortho(panTL.X, panBR.X, panBR.Y, panTL.Y, -1, 1);
 
@@ -312,6 +305,14 @@ namespace FrozenNorth.OpenGL.FN2D
 		}
 
 		/// <summary>
+		/// Gets the list of sub-controls.
+		/// </summary>
+		public FN2DControlList Controls
+		{
+			get { return controls; }
+		}
+
+		/// <summary>
 		/// Gets or sets the corner radius.
 		/// </summary>
 		public virtual int CornerRadius
@@ -397,19 +398,6 @@ namespace FrozenNorth.OpenGL.FN2D
 		public virtual FN2DImage BackgroundImageControl
 		{
 			get { return backgroundImage; }
-		}
-
-		/// <summary>
-		/// Gets or sets the mirroring.
-		/// </summary>
-		public virtual FN2DMirroring Mirroring
-		{
-			get { return mirroring; }
-			set
-			{
-				mirroring = value;
-				Refresh();
-			}
 		}
 
 		/// <summary>
@@ -775,7 +763,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		public virtual bool Touching
 		{
 			get { return touching; }
-			internal set
+			set
 			{
 				touching = value;
 				canvas.TouchControl = touching ? this : null;
@@ -809,6 +797,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		/// </summary>
 		public virtual void AfterMove()
 		{
+			canvas.IsDirty = true;
 		}
 
 		/// <summary>
@@ -832,11 +821,12 @@ namespace FrozenNorth.OpenGL.FN2D
 		}
 
 		/// <summary>
-		/// Gets the control that contains this control.
+		/// Gets or sets the control that contains this control.
 		/// </summary>
 		public virtual FN2DControl Parent
 		{
-			get { return parent;}
+			get { return parent; }
+			set { parent = value; }
 		}
 
 		/// <summary>
@@ -845,7 +835,6 @@ namespace FrozenNorth.OpenGL.FN2D
 		/// <param name="control">Control to be added.</param>
 		public virtual void Add(FN2DControl control)
 		{
-			control.parent = this;
 			controls.Add(control);
 		}
 
@@ -856,7 +845,6 @@ namespace FrozenNorth.OpenGL.FN2D
 		/// <param name="control">Control to be inserted.</param>
 		public virtual void Insert(int index, FN2DControl control)
 		{
-			control.parent = this;
 			controls.Insert(index, control);
 		}
 
@@ -865,16 +853,11 @@ namespace FrozenNorth.OpenGL.FN2D
 		/// </summary>
 		public virtual bool Remove(FN2DControl control)
 		{
-			bool result = controls.Remove(control);
-			if (result)
-			{
-				control.parent = null;
-			}
-			return result;
+			return controls.Remove(control);
 		}
 
 		/// <summary>
-		/// Determines if a control is a sub-control if this control.
+		/// Determines if a control is a sub-control of this control.
 		/// </summary>
 		/// <param name="control">Control to look for in this control.</param>
 		/// <returns>True if found, false if not</returns>
@@ -891,92 +874,65 @@ namespace FrozenNorth.OpenGL.FN2D
 		}
 
 		/// <summary>
-		/// Called when a finger goes down on the control.
+		/// Gets the topmost sub-control that contains a specific location.
+		/// </summary>
+		/// <param name="location">Location to test.</param>
+		/// <returns>Topmost control if the location is within this control, null if not.</returns>
+		public virtual FN2DControl HitTest(Point location)
+		{
+			if (Visible && Enabled && TouchEnabled && Frame.Contains(location))
+			{
+				Point controlLocation = new Point(location.X - Frame.X, location.Y - Frame.Y);
+				for (int i = controls.Count - 1; i >= 0; i--)
+				{
+					FN2DControl hitControl = controls[i].HitTest(controlLocation);
+					if (hitControl != null)
+					{
+						location.X = controlLocation.X;
+						location.Y = controlLocation.Y;
+						return hitControl;
+					}
+				}
+				return this;
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// Called when a touch down event occurs on the control.
 		/// </summary>
 		/// <param name="e">Touch event arguments.</param>
 		public virtual void TouchDown(FN2DTouchEventArgs e)
 		{
-			//Console.WriteLine("TouchDown: " + enabled + "   " + touchEnabled + "   " + e.Location + "   " + frame);
-			if (visible && enabled && touchEnabled)
-			{
-				for (int i = controls.Count - 1; i >= 0; i--)
-				{
-					FN2DControl control = controls[i];
-					if (control.Visible && control.Enabled && control.TouchEnabled && control.Frame.Contains(e.Location))
-					{
-						Point location = new Point(e.Location.X - control.Frame.X, e.Location.Y - control.Frame.Y);
-						control.TouchDown(new FN2DTouchEventArgs(location, e.Buttons));
-						break;
-					}
-				}
-			}
 		}
 
 		/// <summary>
-		/// Called when a finger moves over the control.
+		/// Called when a touch move event occurs when this is the current touch control.
 		/// </summary>
 		/// <param name="e">Touch event arguments.</param>
 		public virtual void TouchMove(FN2DTouchEventArgs e)
 		{
-			//Console.WriteLine("TouchMove: " + enabled + "   " + touchEnabled + "   " + e.Location + "   " + frame);
-			if (canvas.TouchControl == null)
-			{
-				return;
-			}
-			foreach (FN2DControl control in controls)
-			{
-				if (control == canvas.TouchControl || control.Contains(canvas.TouchControl))
-				{
-					Point location = new Point(e.Location.X - control.Frame.X, e.Location.Y - control.Frame.Y);
-					control.TouchMove(new FN2DTouchEventArgs(location, e.Buttons));
-					break;
-				}
-			}
 		}
 
 		/// <summary>
-		/// Called when a finger goes up on the control.
+		/// Called when a touch up event occurs when this is the current touch control.
 		/// </summary>
 		/// <param name="e">Touch event arguments.</param>
 		public virtual void TouchUp(FN2DTouchEventArgs e)
 		{
-			//Console.WriteLine("TouchUp: " + enabled + "   " + touchEnabled + "   " + e.Location + "   " + frame);
-			if (canvas.TouchControl == null)
+			if (Tapped != null && Touching && e.Location.X >= 0 && e.Location.X < Frame.Width &&
+				e.Location.Y >= 0 && e.Location.Y < Frame.Height)
 			{
-				return;
-			}
-			foreach (FN2DControl control in controls)
-			{
-				bool isTouchControl = control == canvas.TouchControl;
-				if (isTouchControl || control.Contains(canvas.TouchControl))
-				{
-					if (isTouchControl)
-					{
-						control.Touching = false;
-					}
-					Point location = new Point(e.Location.X - control.Frame.X, e.Location.Y - control.Frame.Y);
-					control.TouchUp(new FN2DTouchEventArgs(location, e.Buttons));
-					if (isTouchControl && control.Frame.Contains(e.Location) && control.Tapped != null)
-					{
-						control.Tapped(this, EventArgs.Empty);
-					}
-					break;
-				}
+				Tapped(this, EventArgs.Empty);
 			}
 		}
 
 		/// <summary>
-		/// Cancels any touch tracking that is in progress.
+		/// Called when a touch cancel event occurs when this is the current touch control.
 		/// </summary>
 		/// <param name="e">Touch event arguments.</param>
 		public virtual void TouchCancel(FN2DTouchEventArgs e)
 		{
-			//Console.WriteLine("TouchCancel: " + touchEnabled + "   " + frame);
-			foreach (FN2DControl control in controls)
-			{
-				control.TouchCancel(e);
-			}
-			Touching = false;
 		}
 	}
 
@@ -985,6 +941,98 @@ namespace FrozenNorth.OpenGL.FN2D
 	/// </summary>
 	public class FN2DControlList : List<FN2DControl>
 	{
+		private FN2DControl owner;
+
+		public FN2DControlList(FN2DControl owner = null)
+		{
+			this.owner = owner;
+		}
+
+		public new void Add(FN2DControl control)
+		{
+			if (control != null && owner != null)
+			{
+				control.Parent = owner;
+			}
+			base.Add(control);
+		}
+
+		public new void AddRange(IEnumerable<FN2DControl> collection)
+		{
+			if (owner != null)
+			{
+				foreach (FN2DControl control in collection)
+				{
+					if (control != null)
+					{
+						control.Parent = owner;
+					}
+				}
+			}
+			base.AddRange(collection);
+		}
+
+		public new void Insert(int index, FN2DControl control)
+		{
+			if (control != null && owner != null)
+			{
+				control.Parent = owner;
+			}
+			base.Insert(index, control);
+		}
+
+		public new void InsertRange(int index, IEnumerable<FN2DControl> collection)
+		{
+			if (owner != null)
+			{
+				foreach (FN2DControl control in collection)
+				{
+					if (control != null)
+					{
+						control.Parent = owner;
+					}
+				}
+			}
+			base.InsertRange(index, collection);
+		}
+
+		public new bool Remove(FN2DControl control)
+		{
+			if (control != null)
+			{
+				control.Parent = null;
+			}
+			return base.Remove(control);
+		}
+
+		public new void RemoveAt(int index)
+		{
+			if (index >= 0 && index < Count)
+			{
+				this[index].Parent = null;
+			}
+			base.RemoveAt(index);
+		}
+		
+		public new void RemoveRange(int index, int count)
+		{
+			int n = 0;
+			for (int i = index; i < Count && n < count; i++, n++)
+			{
+				this[i].Parent = null;
+			}
+			base.RemoveRange(index, count);
+		}
+		
+		public new int RemoveAll(Predicate<FN2DControl> match)
+		{
+			foreach (FN2DControl control in this)
+			{
+				control.Parent = null;
+			}
+			return base.RemoveAll(match);
+		}
+
 		public virtual void BringToFront(FN2DControl control)
 		{
 			int i = IndexOf(control);
@@ -1006,38 +1054,29 @@ namespace FrozenNorth.OpenGL.FN2D
 		}
 	}
 
-	[Flags]
-	public enum FN2DMirroring
-	{
-		None = 0x0000,
-		UpDown = 0x0001,
-		LeftRight = 0x0002,
-	}
-
-	[Flags]
-	public enum FN2DTouchButtons
-	{
-		None = 0x0000,
-		Left = 0x0001,
-		Middle = 0x0002,
-		Right = 0x0004
-	}
-
 	public class FN2DTouchEventArgs : EventArgs
 	{
 		public Point Location;
-		public FN2DTouchButtons Buttons;
-		public int NumFingers;
 
-		public FN2DTouchEventArgs(Point location, FN2DTouchButtons buttons)
+		public FN2DTouchEventArgs(int x, int y)
 		{
-			Location = location;
-			Buttons = buttons;
+			Location.X = x;
+			Location.Y = y;
+		}
+
+		public FN2DTouchEventArgs(Point location)
+			: this(location.X, location.Y)
+		{
+		}
+
+		public FN2DTouchEventArgs(PointF location)
+			: this((int)location.X, (int)location.Y)
+		{
 		}
 
 		public new static FN2DTouchEventArgs Empty
 		{
-			get { return new FN2DTouchEventArgs(Point.Empty, FN2DTouchButtons.None); }
+			get { return new FN2DTouchEventArgs(Point.Empty); }
 		}
 	}
 }
