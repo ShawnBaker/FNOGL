@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* Copyright (C) 2013 Frozen North Computing
+* Copyright (C) 2013-2014 Frozen North Computing
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 #if FN2D_WIN
 using OpenTK.Graphics.OpenGL;
-#elif FN2D_IOS
+#elif FN2D_IOS || FN2D_AND
 using OpenTK.Graphics;
 using OpenTK.Graphics.ES11;
 using ArrayCap = OpenTK.Graphics.ES11.All;
@@ -56,6 +56,8 @@ namespace FrozenNorth.OpenGL.FN2D
 		protected static DrawElementsType UnsignedIntElement = DrawElementsType.UnsignedInt;
 #elif FN2D_IOS
 		protected static All UnsignedIntElement = All.UnsignedIntOes;
+#elif FN2D_AND
+		protected static All UnsignedIntElement = All.UnsignedInt;
 #endif
 		// font system variables
 		private static FN2DArraysList arrays = null;
@@ -196,7 +198,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		{
 			if (disposing)
 			{
-			// delete the buffers
+				// delete the buffers
 				if (arrayId != 0)
 				{
 					GL.DeleteBuffers(1, ref arrayId);
@@ -804,13 +806,7 @@ namespace FrozenNorth.OpenGL.FN2D
 					{
 						GL.DrawArrays(drawMode, 0, (int)numVertices);
 					}
-					/*
-					Console.WriteLine("Insets: " + vertices.Length + "  " + texCoords.Length + "  " + colors.Length + "  " + indices.Length);
-					foreach (float item in vertices) Console.Write(" " + item); Console.WriteLine();
-					foreach (float item in texCoords) Console.Write(" " + item); Console.WriteLine();
-					foreach (byte item in colors) Console.Write(" " + item); Console.WriteLine();
-					foreach (int item in indices) Console.Write(" " + item); Console.WriteLine();
-					*/
+					//Dump("Draw");
 
 					// clear the arrays
 					if (numVertices != 0)
@@ -835,7 +831,70 @@ namespace FrozenNorth.OpenGL.FN2D
 		}
 
 		/// <summary>
-		/// determines if we can use vertex buffer objects (VBO's)
+		/// Writes the arrays to the consoled
+		/// </summary>
+		public void Dump(string text)
+		{
+			Console.WriteLine("FN2DArrays " + text);
+			if (usingVBO)
+			{
+				if (numVertices != 0)
+				{
+					Console.Write("   Vertices(" + numVertices + "):");
+					for (int i = 0; i < numVertices; i++)
+						Console.Write("  " + buffer[i].x + "," + buffer[i].y);
+					Console.WriteLine();
+				}
+				if (numTexCoords != 0)
+				{
+					Console.Write("   TexCoords(" + numTexCoords + "):");
+					for (int i = 0; i < numTexCoords; i++)
+						Console.Write("  " + buffer[i].s + "," + buffer[i].t);
+					Console.WriteLine();
+				}
+				if (numColors != 0)
+				{
+					Console.Write("   Colors(" + numColors + "):");
+					for (int i = 0; i < numColors; i++)
+						Console.Write("  " + buffer[i].r + "," + buffer[i].g + "," + buffer[i].b + "," + buffer[i].a);
+					Console.WriteLine();
+				}
+			}
+			else
+			{
+				if (numVertices != 0)
+				{
+					Console.Write("   Vertices(" + numVertices + "):");
+					for (int i = 0; i < numVertices * 2; i += 2)
+						Console.Write("  " + vertices[i] + "," + vertices[i + 1]);
+					Console.WriteLine();
+				}
+				if (numTexCoords != 0)
+				{
+					Console.Write("   TexCoords(" + numTexCoords + "):");
+					for (int i = 0; i < numTexCoords * 2; i += 2)
+						Console.Write("  " + texCoords[i] + "," + texCoords[i + 1]);
+					Console.WriteLine();
+				}
+				if (numColors != 0)
+				{
+					Console.Write("   Colors(" + numColors + "):");
+					for (int i = 0; i < numColors * 4; i += 4)
+						Console.Write("  " + colors[i] + "," + colors[i + 1] + "," + colors[i + 2] + "," + colors[i + 3]);
+					Console.WriteLine();
+				}
+			}
+			if (numIndices != 0)
+			{
+				Console.Write("   Indices(" + numIndices + "):");
+				for (int i = 0; i < numIndices; i++)
+					Console.Write("  " + indices[i]);
+				Console.WriteLine();
+			}
+		}
+
+		/// <summary>
+		/// Determines if we can use vertex buffer objects (VBO's).
 		/// </summary>
 		private static bool UsingVBO
 		{
@@ -844,11 +903,11 @@ namespace FrozenNorth.OpenGL.FN2D
 				if (!gotUsingVBO)
 				{
 					usingVBO = GL.GetString(StringName.Extensions).Contains("GL_ARB_vertex_buffer_object");
+					//usingVBO = false;
 					usingOESVBO = GL.GetString(StringName.Extensions).Contains("GL_OES_vertex_array_object");
 					Console.WriteLine("OpenGL: usingVBO = " + usingVBO + "   usingOESVBO = " + usingOESVBO);
 					gotUsingVBO = true;
 				}
-				//return false;
 				return usingVBO;
 			}
 		}
