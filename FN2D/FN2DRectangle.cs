@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* Copyright (C) 2013 Frozen North Computing
+* Copyright (C) 2013-2014 Frozen North Computing
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@ using System;
 using System.Drawing;
 #if FN2D_WIN
 using OpenTK.Graphics.OpenGL;
-#elif FN2D_IOS
+#elif FN2D_IOS || FN2D_AND
 using OpenTK.Graphics.ES11;
 using BeginMode = OpenTK.Graphics.ES11.All;
 #endif
@@ -43,10 +43,10 @@ namespace FrozenNorth.OpenGL.FN2D
 		protected int cornerRadius = FN2DCanvas.DefaultCornerRadius;
 		protected int numCornerSteps = FN2DCanvas.DefaultCornerSteps;
 		protected FN2DArrays rectArrays = FN2DArrays.Create();
-		protected FN2DArrays topRightArrays = FN2DArrays.Create(BeginMode.TriangleFan);
-		protected FN2DArrays bottomRightArrays = FN2DArrays.Create(BeginMode.TriangleFan);
-		protected FN2DArrays bottomLeftArrays = FN2DArrays.Create(BeginMode.TriangleFan);
-		protected FN2DArrays topLeftArrays = FN2DArrays.Create(BeginMode.TriangleFan);
+		protected FN2DArrays topRightArrays = null;
+		protected FN2DArrays bottomRightArrays = null;
+		protected FN2DArrays bottomLeftArrays = null;
+		protected FN2DArrays topLeftArrays = null;
 
 		/// <summary>
 		/// Constructor - Creates a gradient rectangle with a corner radius.
@@ -252,10 +252,7 @@ namespace FrozenNorth.OpenGL.FN2D
 			if (frame.Width == 0 || frame.Height == 0 || (topColor == Color.Transparent && bottomColor == Color.Transparent))
 			{
 				rectArrays.Clear();
-				topRightArrays.Clear();
-				bottomRightArrays.Clear();
-				bottomLeftArrays.Clear();
-				topLeftArrays.Clear();
+				FreeCornerArrays();
 			}
 
 			// if there's no corner radius then draw a rectangle
@@ -263,10 +260,7 @@ namespace FrozenNorth.OpenGL.FN2D
 			{
 				rectArrays.AllocRects(1, false, true);
 				AddRect(0, 0, frame.Width, frame.Height, topColor, bottomColor);
-				topRightArrays.Clear();
-				bottomRightArrays.Clear();
-				bottomLeftArrays.Clear();
-				topLeftArrays.Clear();
+				FreeCornerArrays();
 			}
 
 			// otherwise, draw a rounded rectangle
@@ -277,15 +271,19 @@ namespace FrozenNorth.OpenGL.FN2D
 				AddRect(frame.Width - cornerRadius, cornerRadius, frame.Width, frame.Height - cornerRadius);
 				AddRect(cornerRadius, 0, frame.Width - cornerRadius, frame.Height, topColor, bottomColor);
 
+				topRightArrays = FN2DArrays.Create(BeginMode.TriangleFan);
 				topRightArrays.Alloc(numCornerSteps + 2, 0, numCornerSteps + 2, 0);
 				AddCorner(topRightArrays, frame.Width - cornerRadius, cornerRadius, Math.PI * 1.5);
 
+				bottomRightArrays = FN2DArrays.Create(BeginMode.TriangleFan);
 				bottomRightArrays.Alloc(numCornerSteps + 2, 0, numCornerSteps + 2, 0);
 				AddCorner(bottomRightArrays, frame.Width - cornerRadius, frame.Height - cornerRadius, 0);
 
+				bottomLeftArrays = FN2DArrays.Create(BeginMode.TriangleFan);
 				bottomLeftArrays.Alloc(numCornerSteps + 2, 0, numCornerSteps + 2, 0);
 				AddCorner(bottomLeftArrays, cornerRadius, frame.Height - cornerRadius, Math.PI * 0.5);
 
+				topLeftArrays = FN2DArrays.Create(BeginMode.TriangleFan);
 				topLeftArrays.Alloc(numCornerSteps + 2, 0, numCornerSteps + 2, 0);
 				AddCorner(topLeftArrays, cornerRadius, cornerRadius, Math.PI);
 			}
@@ -297,10 +295,13 @@ namespace FrozenNorth.OpenGL.FN2D
 		public void Draw()
 		{
 			rectArrays.Draw();
-			topRightArrays.Draw();
-			bottomRightArrays.Draw();
-			bottomLeftArrays.Draw();
-			topLeftArrays.Draw();
+			if (topRightArrays != null)
+			{
+				topRightArrays.Draw();
+				bottomRightArrays.Draw();
+				bottomLeftArrays.Draw();
+				topLeftArrays.Draw();
+			}
 		}
 
 		/// <summary>
@@ -359,6 +360,25 @@ namespace FrozenNorth.OpenGL.FN2D
 				float newY = y + (float)Math.Sin(angle) * cornerRadius;
 				arrays.AddVertex(x + (float)Math.Cos(angle) * cornerRadius, newY, GetColor(newY));
 				angle += angleStep;
+			}
+		}
+		
+		/// <summary>
+		/// Frees the corner arrays.
+		/// </summary>
+		private void FreeCornerArrays()
+		{
+			if (topRightArrays != null)
+			{
+				topRightArrays.Dispose();
+				bottomRightArrays.Dispose();
+				bottomLeftArrays.Dispose();
+				topLeftArrays.Dispose();
+				
+				topRightArrays = null;
+				bottomRightArrays = null;
+				bottomLeftArrays = null;
+				topLeftArrays = null;
 			}
 		}
 	}
