@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* Copyright (C) 2013 Frozen North Computing
+* Copyright (C) 2013-2014 Frozen North Computing
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -52,6 +52,9 @@ namespace FrozenNorth.OpenGL.FN2D
 		public FN2DCanvas(Size size, string fontPath = null)
 			: base(new RectangleF(0, 0, size.Width, size.Height))
 		{
+			// enable multiple touches
+			MultipleTouchEnabled = true;
+			
 			// create the OpenGL context
 			context = new EAGLContext(EAGLRenderingAPI.OpenGLES1);
 			EAGLContext.SetCurrentContext(context);
@@ -185,14 +188,26 @@ namespace FrozenNorth.OpenGL.FN2D
 		}
 
 		/// <summary>
+		/// Makes our context the current one.
+		/// </summary>
+		public void MakeCurrent()
+		{
+			EAGLContext.SetCurrentContext(context);
+		}
+
+		/// <summary>
+		/// Brings the background buffer to the foreground.
+		/// </summary>
+		public void SwapBuffers()
+		{
+			context.PresentRenderBuffer((int)All.RenderbufferOes);
+		}
+
+		/// <summary>
 		/// Bind our buffers.
 		/// </summary>
 		public void Bind()
 		{
-			// make us the current context
-			EAGLContext.SetCurrentContext(context);
-
-			// bind the buffers
 			GL.Oes.BindRenderbuffer(All.RenderbufferOes, colorRenderBuffer);
 			GL.Oes.BindFramebuffer(All.FramebufferOes, frameBuffer);
 		}
@@ -206,40 +221,52 @@ namespace FrozenNorth.OpenGL.FN2D
 			GL.Oes.BindFramebuffer(All.FramebufferOes, 0);
 		}
 
-		public void SwapBuffers()
-		{
-			context.PresentRenderBuffer((int)All.RenderbufferOes);
-		}
-
+		/// <summary>
+		/// Process single finger touch down events.
+		/// </summary>
 		public override void TouchesBegan(NSSet touches, UIEvent evt)
 		{
 			base.TouchesBegan(touches, evt);
-
-			PointF location = ((UITouch)touches.AnyObject).LocationInView(this);
-			rootControl.TouchDown(new FN2DTouchEventArgs(new Point((int)location.X, (int)location.Y), FN2DTouchButtons.Left));
+			if (touches.Count == 1)
+			{
+				PointF location = ((UITouch)touches.AnyObject).LocationInView(this);
+				OnTouchDown(new FN2DTouchEventArgs(location));
+			}
 		}
 
+		/// <summary>
+		/// Process single finger touch move events.
+		/// </summary>
 		public override void TouchesMoved(NSSet touches, UIEvent evt)
 		{
 			base.TouchesMoved(touches, evt);
-			
-			PointF location = ((UITouch)touches.AnyObject).LocationInView(this);
-			rootControl.TouchMove(new FN2DTouchEventArgs(new Point((int)location.X, (int)location.Y), FN2DTouchButtons.Left));
+			if (touches.Count == 1)
+			{
+				PointF location = ((UITouch)touches.AnyObject).LocationInView(this);
+				OnTouchMove(new FN2DTouchEventArgs(location));
+			}
 		}
 
+		/// <summary>
+		/// Process single finger touch up events.
+		/// </summary>
 		public override void TouchesEnded(NSSet touches, UIEvent evt)
 		{
 			base.TouchesEnded(touches, evt);
-			
-			PointF location = ((UITouch)touches.AnyObject).LocationInView(this);
-			rootControl.TouchUp(new FN2DTouchEventArgs(new Point((int)location.X, (int)location.Y), FN2DTouchButtons.Left));
+			if (touches.Count == 1)
+			{
+				PointF location = ((UITouch)touches.AnyObject).LocationInView(this);
+				OnTouchUp(new FN2DTouchEventArgs(location));
+			}
 		}
 
+		/// <summary>
+		/// Process touch cancel events.
+		/// </summary>
 		public override void TouchesCancelled(NSSet touches, UIEvent evt)
 		{
 			base.TouchesCancelled(touches, evt);
-			
-			rootControl.TouchCancel(FN2DTouchEventArgs.Empty);
+			OnTouchCancel(FN2DTouchEventArgs.Empty);
 		}
 	}
 }

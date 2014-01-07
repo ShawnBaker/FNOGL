@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* Copyright (C) 2013 Frozen North Computing
+* Copyright (C) 2013-2014 Frozen North Computing
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -152,42 +152,33 @@ namespace FrozenNorth.OpenGL.FN2D
 		}
 
 		/// <summary>
-		/// Pass mouse down events to the root control.
+		/// Convert left mouse down events to touch down events.
 		/// </summary>
 		protected override void OnMouseDown(MouseEventArgs e)
 		{
 			base.OnMouseDown(e);
-
-			if (loaded)
+			if (e.Button == MouseButtons.Left)
 			{
-				rootControl.TouchDown(GetTouchArgs(e));
+				OnTouchDown(GetTouchArgs(e));
 			}
 		}
 
 		/// <summary>
-		/// Pass mouse move events to the root control.
+		/// Convert left mouse move events to touch move events.
 		/// </summary>
 		protected override void OnMouseMove(MouseEventArgs e)
 		{
 			base.OnMouseMove(e);
-
-			if (loaded)
-			{
-				rootControl.TouchMove(GetTouchArgs(e));
-			}
+			OnTouchMove(GetTouchArgs(e));
 		}
 
 		/// <summary>
-		/// Pass mouse up events to the root control.
+		/// Convert left mouse up events to touch up events.
 		/// </summary>
 		protected override void OnMouseUp(MouseEventArgs e)
 		{
 			base.OnMouseUp(e);
-			
-			if (loaded)
-			{
-				rootControl.TouchUp(GetTouchArgs(e));
-			}
+			OnTouchUp(GetTouchArgs(e));
 		}
 
 		/// <summary>
@@ -198,9 +189,9 @@ namespace FrozenNorth.OpenGL.FN2D
 		private FN2DTouchEventArgs GetTouchArgs(MouseEventArgs e)
 		{
 			FN2DTouchButtons buttons = FN2DTouchButtons.None;
-			if (e.Button == System.Windows.Forms.MouseButtons.Left) buttons = buttons | FN2DTouchButtons.Left;
-			if (e.Button == System.Windows.Forms.MouseButtons.Middle) buttons = buttons | FN2DTouchButtons.Middle;
-			if (e.Button == System.Windows.Forms.MouseButtons.Right) buttons = buttons | FN2DTouchButtons.Right;
+			if (e.Button == MouseButtons.Left) buttons = buttons | FN2DTouchButtons.Left;
+			if (e.Button == MouseButtons.Middle) buttons = buttons | FN2DTouchButtons.Middle;
+			if (e.Button == MouseButtons.Right) buttons = buttons | FN2DTouchButtons.Right;
 			return new FN2DTouchEventArgs(e.Location, buttons);
 		}
 	}
