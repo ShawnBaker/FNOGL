@@ -8,7 +8,7 @@
     <ProjectGuid>{B57C5009-1F32-49C7-8D18-9F829671AD5C}</ProjectGuid>
     <ProjectTypeGuids>{6BC8ED88-2882-458C-8E55-DFD12B67127B};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
-    <RootNamespace>FrozenNorth.OpenGL.2D</RootNamespace>
+    <RootNamespace>FrozenNorth.OpenGL.FN2D</RootNamespace>
     <IPhoneResourcePrefix>Resources</IPhoneResourcePrefix>
     <AssemblyName>FN2D</AssemblyName>
   </PropertyGroup>
@@ -57,5 +57,6 @@
     <Compile Include="FN2DLineStrips.cs" />
     <Compile Include="FN2DDrawingImage.cs" />
     <Compile Include="FN2DPinchGestureRecognizer.cs" />
+    <Compile Include="FN2DLine.cs" />
   </ItemGroup>
 </Project>

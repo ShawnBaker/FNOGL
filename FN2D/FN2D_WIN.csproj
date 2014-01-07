@@ -7,7 +7,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{4EE546B8-15AB-45AA-B208-721BFC01CE48}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>FrozenNorth.OpenGL.2D</RootNamespace>
+    <RootNamespace>FrozenNorth.OpenGL.FN2D</RootNamespace>
     <AssemblyName>FN2D</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
@@ -55,18 +55,21 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="OpenTK, Version=1.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\ThirdParty\windows\OpenTK.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenTK.GLControl, Version=1.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\ThirdParty\windows\OpenTK.GLControl.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="OpenTK">
-      <HintPath>..\ThirdParty\OpenTK.dll</HintPath>
-    </Reference>
-    <Reference Include="OpenTK.GLControl">
-      <HintPath>..\ThirdParty\OpenTK.GLControl.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FN2DFreeType.cs" />
+    <Compile Include="FN2DLine.cs" />
     <Compile Include="FN2DMaxRects.cs" />
     <Compile Include="FN2DRectangleInsets.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
