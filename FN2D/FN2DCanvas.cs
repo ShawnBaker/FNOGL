@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* Copyright (C) 2013 Frozen North Computing
+* Copyright (C) 2013-2014 Frozen North Computing
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -29,9 +29,13 @@ using System.Runtime.InteropServices;
 #if FN2D_WIN
 using OpenTK.Graphics.OpenGL;
 using FN2DBitmap = System.Drawing.Bitmap;
-#elif FN2D_IOS
+#elif FN2D_IOS || FN2D_AND
 using OpenTK.Graphics.ES11;
+#if FN2D_IOS
 using FN2DBitmap = MonoTouch.UIKit.UIImage;
+#elif FN2D_AND
+using FN2DBitmap = Android.Graphics.Bitmap;
+#endif
 using BlendingFactorDest = OpenTK.Graphics.ES11.All;
 using BlendingFactorSrc = OpenTK.Graphics.ES11.All;
 using EnableCap = OpenTK.Graphics.ES11.All;
@@ -82,17 +86,19 @@ namespace FrozenNorth.OpenGL.FN2D
 		private bool dirty = false;
 		private List<FN2DAnimation> animations = new List<FN2DAnimation>();
 		private float drawTimerInterval = DEFAULT_DRAW_TIMER_INTERVAL;
-		//private int lastDrawTickCount = 0;
-		//private Stopwatch stopWatch = new Stopwatch();
 
 		/// <summary>
 		/// Constructor - Creates the canvas.
 		/// </summary>
 		/// <param name="size">Size of the canvas.</param>
+		/// <param name="fontPath">Path to the fonts.</param>
 		public void Initialize(Size size, string fontPath)
 		{
+			MakeCurrent();
+
 			// set the size
 			Size = size;
+			Console.WriteLine("Initialize: " + size);
 
 			// initialize the font system
 			FN2DFont.OpenFontManager(fontPath);
@@ -115,10 +121,20 @@ namespace FrozenNorth.OpenGL.FN2D
 
 			// set the loaded flag
 			loaded = true;
+			
+			// indicate that we have finished initialization
+			OnInitialized();
 		}
 
 		/// <summary>
-		/// Frees unmanaged resources.
+		/// Called when the canvas has finished being initialized.
+		/// </summary>
+		public virtual void OnInitialized()
+		{
+		}
+
+		/// <summary>
+		/// Frees unmanaged resources and calls Dispose() on the member objects.
 		/// </summary>
 		protected override void Dispose(bool disposing)
 		{
@@ -127,7 +143,7 @@ namespace FrozenNorth.OpenGL.FN2D
 				if (rootControl != null) rootControl.Dispose();
 			}
 			rootControl = null;
-			FN2DFont.CloseFontManager();
+			//FN2DFont.CloseFontManager();
 			FN2DArrays.CloseArraysManager();
 			base.Dispose(disposing);
 		}
@@ -137,7 +153,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		/// </summary>
 #if FN2D_WIN
 		public override void Refresh()
-#elif FN2D_IOS
+#elif FN2D_IOS || FN2D_AND
 		public virtual void Refresh()
 #endif
 		{
@@ -185,7 +201,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		/// <summary>
 		/// Gets or sets the root control's background color.
 		/// </summary>
-#if FN2D_WIN
+#if FN2D_WIN || FN2D_AND
 		public Color BackgroundColor
 #elif FN2D_IOS
 		public new Color BackgroundColor
@@ -206,7 +222,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		/// </summary>
 #if FN2D_WIN
 		public new FN2DBitmap BackgroundImage
-#elif FN2D_IOS
+#elif FN2D_IOS || FN2D_AND
 		public FN2DBitmap BackgroundImage
 #endif
 		{
@@ -263,17 +279,93 @@ namespace FrozenNorth.OpenGL.FN2D
 			return loaded ? rootControl.Remove(control) : false;
 		}
 
+		/// <summary>
+		/// Pass touch down events to the appropriate control.
+		/// </summary>
+		protected virtual void OnTouchDown(FN2DTouchEventArgs e)
+		{
+			if (loaded)
+			{
+				FN2DControl control = rootControl.HitTest(e.Location);
+				if (control != null)
+				{
+					e.Location = ControlLocation(control, e.Location);
+					control.TouchDown(e);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Pass touch move events to the appropriate control.
+		/// </summary>
+		protected virtual void OnTouchMove(FN2DTouchEventArgs e)
+		{
+			if (loaded)
+			{
+				FN2DControl control = TouchControl ?? rootControl.HitTest(e.Location);
+				if (control != null)
+				{
+					e.Location = ControlLocation(control, e.Location);
+					control.TouchMove(e);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Pass touch up events to the appropriate control.
+		/// </summary>
+		protected virtual void OnTouchUp(FN2DTouchEventArgs e)
+		{
+			if (loaded)
+			{
+				FN2DControl control = TouchControl ?? rootControl.HitTest(e.Location);
+				if (control != null)
+				{
+					e.Location = ControlLocation(control, e.Location);
+					control.TouchUp(e);
+					control.Touching = false;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Pass touch cancel events to the appropriate control.
+		/// </summary>
+		protected virtual void OnTouchCancel(FN2DTouchEventArgs e)
+		{
+			if (loaded)
+			{
+				if (TouchControl != null)
+				{
+					FN2DControl control = TouchControl;
+					e.Location = ControlLocation(control, e.Location);
+					control.TouchCancel(e);
+					control.Touching = false;
+				}
+			}
+		}
+		
+		/// <summary>
+		/// Gets a canvas location relative to a specific control.
+		/// </summary>
+		/// <param name="control">Control to get the location within.</param>
+		/// <param name="location">Canvas location</param>
+		/// <returns>Location relative to the control.</returns>
 		public Point ControlLocation(FN2DControl control, Point location)
 		{
-			if (control == rootControl || control == null)
+			FN2DControlList controls = new FN2DControlList(null);
+			while (control != null)
 			{
-				return location;
+				controls.Add(control);
+				control = control.Parent;
 			}
-			else
+			Point controlLocation = location;
+			for (int i = controls.Count - 1; i >= 0; i--)
 			{
-				location = ControlLocation(control.Parent, location);
-				return new Point(location.X - control.Frame.X, location.Y - control.Frame.Y);
+				controlLocation.X -= controls[i].Frame.X;
+				controlLocation.Y -= controls[i].Frame.Y;
 			}
+			return controlLocation;
 		}
 
 		/// <summary>
@@ -308,6 +400,7 @@ namespace FrozenNorth.OpenGL.FN2D
 				if (loaded && (dirty || force))
 				{
 					// bind the drawing buffers
+					MakeCurrent();
 					Bind();
 
 					// initialize the matrices
@@ -365,7 +458,6 @@ namespace FrozenNorth.OpenGL.FN2D
 
 					// clear the dirty flag
 					dirty = false;
-					//lastDrawTickCount = Environment.TickCount;
 				}
 			}
 			catch { }
@@ -391,7 +483,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		private void HandleDrawTimer()
 		{
 			// perform the active animations
-			bool force = animations.Count != 0;// || (Environment.TickCount - lastDrawTickCount) > 1000;
+			bool force = animations.Count != 0;
 			foreach (FN2DAnimation animation in animations)
 			{
 				animation.currentTicks++;
@@ -408,11 +500,7 @@ namespace FrozenNorth.OpenGL.FN2D
 			}
 
 			// draw the controls
-			//stopWatch.Reset();
-			//stopWatch.Start();
 			Draw(force);
-			//stopWatch.Stop();
-			//Console.WriteLine("Draw: " + stopWatch.ElapsedMilliseconds);
 		}
 
 		/// <summary>
