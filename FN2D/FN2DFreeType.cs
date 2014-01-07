@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* Copyright (C) 2013 Frozen North Computing
+* Copyright (C) 2013-2014 Frozen North Computing
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -319,6 +319,8 @@ namespace FrozenNorth.OpenGL.FN2D
 		private const string FreeTypeDll = "freetype.dll";
 #elif FN2D_IOS
 		private const string FreeTypeDll = "__Internal";
+#elif FN2D_AND
+		private const string FreeTypeDll = "freetype";
 #endif
 		private const CallingConvention FreeTypeCallingConvention = CallingConvention.Cdecl;
 
@@ -331,8 +333,11 @@ namespace FrozenNorth.OpenGL.FN2D
 		[DllImport(FreeTypeDll, CallingConvention = FreeTypeCallingConvention)]
 		public static extern int FT_New_Face(IntPtr library, IntPtr fileName, int index, out IntPtr face);
 
+		//[DllImport(FreeTypeDll, CallingConvention = FreeTypeCallingConvention)]
+		//public static extern int FT_New_Face(IntPtr library, IntPtr fileName, int index, out FTFace face);
+
 		[DllImport(FreeTypeDll, CallingConvention = FreeTypeCallingConvention)]
-		public static extern int FT_New_Face(IntPtr library, IntPtr fileName, int index, out FTFace face);
+		public static extern int FT_New_Memory_Face(IntPtr library, byte[] file_base, int size, int index, out IntPtr face);
 
 		[DllImport(FreeTypeDll, CallingConvention = FreeTypeCallingConvention)]
 		public static extern void FT_Done_Face(IntPtr face);
@@ -381,6 +386,7 @@ namespace FrozenNorth.OpenGL.FN2D
 		public class Face : IDisposable
 		{
 			private IntPtr facePtr = IntPtr.Zero;
+			private byte[] memory = null;
 			private FTFace face;
 			private FTSize size;
 			private int index = 0;
@@ -400,6 +406,17 @@ namespace FrozenNorth.OpenGL.FN2D
 				}
 			}
 			
+			public Face(byte[] memory)
+			{
+				error = FT_New_Memory_Face(library, memory, memory.Length, index, out facePtr);
+				if (error == 0 && facePtr != IntPtr.Zero)
+				{
+					this.memory = memory;
+					face = (FTFace)Marshal.PtrToStructure(facePtr, face.GetType());
+					size = (FTSize)Marshal.PtrToStructure(face.size, size.GetType());
+				}
+			}
+
 			/// <summary>
 			/// Destructor - Calls Dispose().
 			/// </summary>
@@ -432,6 +449,7 @@ namespace FrozenNorth.OpenGL.FN2D
 					FT_Done_Face(facePtr);
 					facePtr = IntPtr.Zero;
 				}
+				memory = null;
 			}
 
 			public int SelectCharmap(FTEncoding encoding)

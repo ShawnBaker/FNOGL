@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* Copyright (C) 2013 Frozen North Computing
+* Copyright (C) 2013-2014 Frozen North Computing
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -75,6 +75,8 @@ namespace FrozenNorth.OpenGL.FN2D
 					path = Path.Combine(Directory.GetCurrentDirectory(), "Fonts");
 #elif FN2D_IOS
 					path = Path.Combine(NSBundle.MainBundle.ResourcePath, "Fonts");
+#elif FN2D_AND
+					path = "Fonts";
 #endif
 				}
 				fontPath = path;
@@ -135,8 +137,17 @@ namespace FrozenNorth.OpenGL.FN2D
 			this.faceName = faceName;
 			this.size = size;
 
+
 			// get the font face
-			face = new FreeType.Face(Path.ChangeExtension(Path.Combine(fontPath, faceName), "ttf"));
+			string fileName = Path.ChangeExtension(Path.Combine(fontPath, faceName), "ttf");
+#if FN2D_AND
+			MemoryStream stream = new MemoryStream();
+			canvas.Context.Assets.Open(fileName).CopyTo(stream);
+			face = new FreeType.Face(stream.ToArray());
+			stream.Dispose();
+#else
+			face = new FreeType.Face(fileName);
+#endif
 			if (face == null)
 			{
 				return;
