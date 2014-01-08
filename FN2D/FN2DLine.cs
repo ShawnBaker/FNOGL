@@ -263,9 +263,9 @@ namespace FrozenNorth.OpenGL.FN2D
 				cap2Arrays.AddVertex(p2.X - tx - Rx, p2.Y - ty - Ry, colorA);
 				cap2Arrays.AddVertex(p2.X + tx + Rx, p2.Y + ty + Ry, colorA);
 			}
-			lineArrays.Dump("lines");
-			cap1Arrays.Dump("cap1");
-			cap2Arrays.Dump("cap2");
+			//lineArrays.Dump("lines");
+			//cap1Arrays.Dump("cap1");
+			//cap2Arrays.Dump("cap2");
 		}
 
 		/// <summary>
