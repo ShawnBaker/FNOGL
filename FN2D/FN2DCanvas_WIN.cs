@@ -159,7 +159,7 @@ namespace FrozenNorth.OpenGL.FN2D
 			base.OnMouseDown(e);
 			if (e.Button == MouseButtons.Left)
 			{
-				OnTouchDown(GetTouchArgs(e));
+				OnTouchDown(new FN2DTouchEventArgs(e.Location));
 			}
 		}
 
@@ -169,7 +169,10 @@ namespace FrozenNorth.OpenGL.FN2D
 		protected override void OnMouseMove(MouseEventArgs e)
 		{
 			base.OnMouseMove(e);
-			OnTouchMove(GetTouchArgs(e));
+			if (e.Button == MouseButtons.Left)
+			{
+				OnTouchMove(new FN2DTouchEventArgs(e.Location));
+			}
 		}
 
 		/// <summary>
@@ -178,21 +181,10 @@ namespace FrozenNorth.OpenGL.FN2D
 		protected override void OnMouseUp(MouseEventArgs e)
 		{
 			base.OnMouseUp(e);
-			OnTouchUp(GetTouchArgs(e));
-		}
-
-		/// <summary>
-		/// Gets the touch event arguments from the mouse event arguments.
-		/// </summary>
-		/// <param name="e">Mouse event arguments.</param>
-		/// <returns>Touch event arguments.</returns>
-		private FN2DTouchEventArgs GetTouchArgs(MouseEventArgs e)
-		{
-			FN2DTouchButtons buttons = FN2DTouchButtons.None;
-			if (e.Button == MouseButtons.Left) buttons = buttons | FN2DTouchButtons.Left;
-			if (e.Button == MouseButtons.Middle) buttons = buttons | FN2DTouchButtons.Middle;
-			if (e.Button == MouseButtons.Right) buttons = buttons | FN2DTouchButtons.Right;
-			return new FN2DTouchEventArgs(e.Location, buttons);
+			if (e.Button == MouseButtons.Left)
+			{
+				OnTouchUp(new FN2DTouchEventArgs(e.Location));
+			}
 		}
 	}
 }
